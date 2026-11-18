@@ -435,7 +435,7 @@ export default function DeclinedAudits() {
                                         <th scope="col">Auditor</th>
                                         <th scope="col">Reason</th>
                                         <th scope="col">Assigned on</th>
-                                        <th scope="col">Status</th>
+                                        {/* <th scope="col">Status</th> */}
                                         <th scope="col" style={{ textAlign: "right" }}>Action</th>
                                     </tr>
                                 </thead>
@@ -462,7 +462,7 @@ export default function DeclinedAudits() {
                                                     <td>{audit.auditor_name}</td>
                                                     <td><div className="da-reason" title={audit.rejection_reason}>{audit.rejection_reason}</div></td>
                                                     <td><span className="da-date"><FiCalendar aria-hidden="true" />{formatDate(audit.created_at)}</span></td>
-                                                    <td><span className="da-status"><FiSlash aria-hidden="true" />{normalizeStatus(audit.status)}</span></td>
+                                                    {/* <td><span className="da-status"><FiSlash aria-hidden="true" />{normalizeStatus(audit.status)}</span></td> */}
                                                     <td style={{ textAlign: "right" }}>
                                                         <button type="button" className="da-view"
                                                             onClick={() => setSelectedAudit(audit)} aria-label={`View ${audit.name}`}>

@@ -459,7 +459,7 @@ export default function PendingAssignments() {
                                         <th scope="col">Audit ID</th>
                                         <th scope="col">Assigned on</th>
                                         <th scope="col">Checklist</th>
-                                        <th scope="col">Status</th>
+                                        {/* <th scope="col">Status</th> */}
                                         <th scope="col" style={{ textAlign: "right" }}>Actions</th>
                                     </tr>
                                 </thead>
@@ -485,7 +485,7 @@ export default function PendingAssignments() {
                                                     <td className="pa-minor">{audit.id ?? "—"}</td>
                                                     <td><span className="pa-date"><FiCalendar aria-hidden="true" /> {formatDate(audit.created_at)}</span></td>
                                                     <td><span className="pa-domains-count">{audit.domains.length} {audit.domains.length === 1 ? "domain" : "domains"}</span></td>
-                                                    <td><StatusBadge status={audit.status} /></td>
+                                                    {/* <td><StatusBadge status={audit.status} /></td> */}
                                                     <td><Actions audit={audit} busy={busy} onView={setSelectedAudit} onDecide={startDecision} /></td>
                                                 </tr>
                                                 {expandedRow && (

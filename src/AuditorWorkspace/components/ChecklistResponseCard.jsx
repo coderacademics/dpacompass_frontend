@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
     ChevronDown,
@@ -21,7 +22,8 @@ export default function ChecklistResponseCard({
     isSaved = false,
     isDirty = false
 }) {
-    const [open, setOpen] = useState(true);
+    // Every checklist question starts collapsed.
+    const [open, setOpen] = useState(false);
 
     const checklistId = item.checklist_id;
 
@@ -30,35 +32,51 @@ export default function ChecklistResponseCard({
     };
 
     return (
-        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-[0_1px_5px_rgba(15,23,42,0.025)]">
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-all duration-200 hover:border-blue-200">
 
-            {/* CHECKLIST HEADER */}
+            {/* CHECKLIST HEADER: CODE + QUESTION */}
 
             <button
                 type="button"
                 onClick={() => setOpen(prev => !prev)}
-                className="w-full flex items-center justify-between
-                    gap-3 p-4 text-left hover:bg-slate-100"
+                aria-expanded={open}
+                className={`w-full flex items-start justify-between gap-4 p-4 md:p-5 text-left transition-colors ${
+                    open
+                        ? "bg-blue-50/40"
+                        : "bg-white hover:bg-slate-50"
+                }`}
             >
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
 
-                    <div className="flex flex-wrap items-center gap-2">
+                    {/* CODE AND QUESTION */}
+                    <div className="flex items-start gap-2">
 
-                        <span className="text-base font-semibold text-slate-900">
-                            {item.code || item.clause}
+                        <span className="shrink-0 text-sm md:text-base font-bold text-blue-800">
+                            {item.code || item.clause}.
+                        </span>
+
+                        <p className="text-sm md:text-base font-medium leading-7 text-slate-800">
+                            {item.description || "No question description available."}
+                        </p>
+
+                    </div>
+
+                    {/* VERSION AND SAVE STATUS */}
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+
+                        <span className="text-xs text-slate-500">
+                            Version: {item.version || "1.0"}
                         </span>
 
                         {isSaved && !isDirty && (
-                            <span className="text-xs text-emerald-700
-                                flex items-center gap-1">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700">
                                 <CheckCircle2 size={13} />
                                 Saved
                             </span>
                         )}
 
                         {isDirty && (
-                            <span className="text-xs text-amber-700
-                                flex items-center gap-1">
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700">
                                 <Clock size={13} />
                                 Unsaved changes
                             </span>
@@ -66,50 +84,40 @@ export default function ChecklistResponseCard({
 
                     </div>
 
-                    <p className="text-xs md:text-sm text-slate-500 mt-1">
-                        Version: {item.version || "1.0"}
-                    </p>
-
                 </div>
 
-                {open
-                    ? <ChevronUp size={19} className="text-slate-500" />
-                    : <ChevronDown size={19} className="text-slate-500" />
-                }
+                {/* EXPAND / COLLAPSE ICON */}
+                <span className={`mt-1 shrink-0 rounded-lg p-1.5 transition-colors ${
+                    open
+                        ? "bg-blue-100 text-blue-700"
+                        : "text-slate-500"
+                }`}>
+                    {open
+                        ? <ChevronUp size={19} />
+                        : <ChevronDown size={19} />
+                    }
+                </span>
+
             </button>
 
+            {/* EXPANDED RESPONSE SECTION */}
+
             {open && (
-                <div className="border-t border-slate-200 p-4 md:p-5
-                    space-y-5">
+                <div className="space-y-5 border-t border-slate-200 bg-white p-4 md:p-5">
 
-                    {/* DESCRIPTION */}
-
-                    {item.description && (
-                        <div>
-                            <h4 className="text-xs font-bold tracking-wider text-blue-800 uppercase mb-2">
-                                Compliance Requirement
-                            </h4>
-
-                            <p className="text-sm md:text-base text-slate-700 leading-7 whitespace-pre-wrap">
-                                {item.description}
-                            </p>
-                        </div>
-                    )}
-
-                    {/* STATUS */}
+                    {/* COMPLIANCE STATUS */}
 
                     <div>
-                        <label className="block text-sm font-medium
-                            text-slate-700 mb-2">
+                        <label className="mb-2 block text-sm font-medium text-slate-700">
                             Compliance Status
-                            <span className="text-red-700 ml-1">*</span>
+                            <span className="ml-1 text-red-600">*</span>
                         </label>
 
                         <select
                             value={response.status || ""}
                             onChange={e => updateField("status", e.target.value)}
                             disabled={saving}
-                            className="w-full rounded-lg bg-white border border-slate-300 px-3 py-3 text-sm md:text-base text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm md:text-base text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
                         >
                             <option value="">Select status</option>
 
@@ -121,11 +129,10 @@ export default function ChecklistResponseCard({
                         </select>
                     </div>
 
-                    {/* COMMENTS */}
+                    {/* AUDITOR COMMENTS */}
 
                     <div>
-                        <label className="block text-sm font-medium
-                            text-slate-700 mb-2">
+                        <label className="mb-2 block text-sm font-medium text-slate-700">
                             Auditor Comments
                         </label>
 
@@ -137,7 +144,7 @@ export default function ChecklistResponseCard({
                             disabled={saving}
                             rows={4}
                             placeholder="Enter your observations, findings and recommendations..."
-                            className="w-full rounded-lg bg-white border border-slate-300 px-3 py-3 text-sm md:text-base text-slate-900 placeholder-slate-400 outline-none resize-y focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
+                            className="w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm md:text-base text-slate-900 placeholder-slate-400 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
                         />
                     </div>
 
@@ -152,7 +159,7 @@ export default function ChecklistResponseCard({
                         disabled={saving}
                     />
 
-                    {/* ACTIONS */}
+                    {/* ACTION BUTTONS */}
 
                     <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-5">
 
@@ -160,10 +167,7 @@ export default function ChecklistResponseCard({
                             type="button"
                             onClick={() => onClear(item)}
                             disabled={saving || !isDirty}
-                            className="flex items-center gap-2 px-4 py-2
-                                rounded-lg border border-slate-300
-                                text-slate-700 hover:bg-slate-100
-                                disabled:opacity-40"
+                            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             <RotateCcw size={15} />
                             Clear Row
@@ -173,7 +177,7 @@ export default function ChecklistResponseCard({
                             type="button"
                             onClick={() => onSave(item)}
                             disabled={saving || !isDirty}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             <Save size={15} />
                             {saving ? "Saving..." : "Save Response"}
@@ -183,6 +187,7 @@ export default function ChecklistResponseCard({
 
                 </div>
             )}
+
         </div>
     );
 }

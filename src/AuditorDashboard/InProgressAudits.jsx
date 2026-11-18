@@ -236,7 +236,7 @@ export default function InProgressAudits() {
         name: audit.application_details?.name || "Application name unavailable",
         url: audit.application_details?.url || "",
         auditor_name: audit.auditor_name || "Not provided",
-        status: audit.status || "in_progress",
+        // status: audit.status || "in_progress",
         created_at: audit.created_at,
     })), [audits]);
 
@@ -372,7 +372,7 @@ export default function InProgressAudits() {
                                         <th scope="col">Application</th>
                                         <th scope="col">Auditor</th>
                                         <th scope="col">Created on</th>
-                                        <th scope="col">Status</th>
+                                        {/* <th scope="col">Status</th> */}
                                         <th scope="col" style={{ textAlign: "right" }}>Action</th>
                                     </tr>
                                 </thead>
@@ -402,7 +402,7 @@ export default function InProgressAudits() {
                                                     </td>
                                                     <td>{audit.auditor_name}</td>
                                                     <td><span className="ip-date"><FiCalendar aria-hidden="true" />{formatDate(audit.created_at)}</span></td>
-                                                    <td><span className="ip-status"><FiClock aria-hidden="true" />In Progress</span></td>
+                                                    {/* <td><span className="ip-status"><FiClock aria-hidden="true" />In Progress</span></td> */}
                                                     <td style={{ textAlign: "right" }}>
                                                         <button
                                                             type="button"
