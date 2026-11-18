@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
     ChevronDown,
@@ -33,21 +32,18 @@ export default function DomainAccordion({
         : 0;
 
     return (
-        <section className="w-full bg-[#111827]
-            border border-slate-700 rounded-xl overflow-hidden">
+        <section className="w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_2px_12px_rgba(15,23,42,0.04)]">
 
             {/* DOMAIN HEADER */}
 
             <button
                 type="button"
                 onClick={() => setOpen(prev => !prev)}
-                className="w-full p-5 text-left
-                    hover:bg-slate-800/40 transition"
+                className="w-full p-5 md:p-6 text-left hover:bg-slate-50 transition-colors focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-[-2px]"
             >
                 <div className="flex items-start gap-3">
 
-                    <div className="p-2.5 rounded-lg
-                        bg-indigo-500/10 text-indigo-400 shrink-0">
+                    <div className="p-3 rounded-xl bg-blue-50 text-blue-800 shrink-0 ring-1 ring-blue-100">
                         <ClipboardList size={21} />
                     </div>
 
@@ -55,19 +51,18 @@ export default function DomainAccordion({
 
                         <div className="flex items-center justify-between gap-3">
 
-                            <h3 className="text-sm md:text-base
-                                font-semibold text-white">
+                            <h3 className="text-base md:text-lg font-semibold tracking-tight text-slate-900">
                                 {domain.domain_name}
                             </h3>
 
                             {open
-                                ? <ChevronUp size={19} className="text-slate-400 shrink-0" />
-                                : <ChevronDown size={19} className="text-slate-400 shrink-0" />
+                                ? <ChevronUp size={19} className="text-slate-500 shrink-0" />
+                                : <ChevronDown size={19} className="text-slate-500 shrink-0" />
                             }
 
                         </div>
 
-                        <p className="text-xs text-slate-400 mt-1">
+                        <p className="text-sm text-slate-500 mt-1">
                             {completed} of {total} saved responses
                         </p>
 
@@ -77,19 +72,18 @@ export default function DomainAccordion({
 
                             <div className="flex items-center justify-between
                                 text-xs mb-2">
-                                <span className="text-slate-400">
+                                <span className="text-slate-500">
                                     Domain progress
                                 </span>
 
-                                <span className="text-indigo-400 font-medium">
+                                <span className="text-blue-700 font-medium">
                                     {percentage}%
                                 </span>
                             </div>
 
-                            <div className="h-2 bg-slate-800
-                                rounded-full overflow-hidden">
+                            <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                                 <div
-                                    className="h-full bg-indigo-500
+                                    className="h-full bg-blue-700
                                         rounded-full transition-all duration-300"
                                     style={{ width: `${percentage}%` }}
                                 />
@@ -105,8 +99,7 @@ export default function DomainAccordion({
             {/* CHECKLIST ITEMS */}
 
             {open && (
-                <div className="border-t border-slate-700
-                    p-4 md:p-5 space-y-4">
+                <div className="border-t border-slate-200 bg-slate-50/50 p-3 md:p-5 space-y-4">
 
                     {checklists.map(item => {
                         const id = item.checklist_id;

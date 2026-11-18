@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
@@ -585,442 +584,253 @@ export default function AuditorChecklistPage() {
 
 
     // ==========================================
-    // RENDER LOADING
+    // UI: enterprise light workspace
+    // DashboardLayout remains the sole page background owner.
     // ==========================================
-
     if (loading) {
-
         return (
-
-            <div className="min-h-screen bg-[#0b1120] flex
-                            items-center justify-center">
-
+            <div className="flex min-h-[45vh] items-center justify-center">
                 <Loader text="Loading auditor checklist..." />
-
             </div>
-
         );
-
     }
-
-
-    // ==========================================
-    // RENDER ERROR
-    // ==========================================
 
     if (error) {
-
         return (
-
-            <div className="min-h-screen bg-[#0b1120]
-                            text-gray-200 p-6">
-
+            <div className="w-full min-w-0 text-slate-900">
                 <button
+                    type="button"
                     onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-indigo-400
-                               hover:text-indigo-300 mb-8"
+                    className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-800"
                 >
-                    <ArrowLeft size={18} />
-                    Back
+                    <ArrowLeft size={17} /> Back
                 </button>
 
-
-                <div className="max-w-xl mx-auto mt-20
-                                bg-[#111827] border border-red-500/20
-                                rounded-xl p-6 text-center">
-
-                    <AlertCircle
-                        size={35}
-                        className="text-red-400 mx-auto mb-4"
-                    />
-
-                    <h2 className="text-lg font-semibold mb-2">
-                        Unable to load audit
-                    </h2>
-
-                    <p className="text-sm text-gray-400 mb-5">
-                        {error}
-                    </p>
-
+                <div className="mx-auto max-w-xl rounded-2xl border border-red-200 bg-white p-8 text-center shadow-sm">
+                    <AlertCircle size={36} className="mx-auto mb-4 text-red-600" aria-hidden="true" />
+                    <h2 className="mb-2 text-xl font-semibold text-slate-900">Unable to load audit</h2>
+                    <p className="mb-5 text-sm leading-6 text-slate-600">{error}</p>
                     <button
+                        type="button"
                         onClick={fetchAuditDetails}
-                        className="px-5 py-2 rounded-lg bg-indigo-600
-                                   hover:bg-indigo-500 text-white"
+                        className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800"
                     >
-                        Try Again
+                        <RefreshCw size={16} /> Try Again
                     </button>
-
                 </div>
-
             </div>
-
         );
-
     }
 
-
-
-    // ==========================================
-    // MAIN UI
-    // ==========================================
-
     return (
-
-        <div className="min-h-screen bg-[#0b1120] text-gray-200 p-4 md:p-6">
-
-            {
-                showGenerateModal && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center
-                    bg-black/70 p-4 backdrop-blur-sm">
-
-                        <div className="w-full max-w-lg rounded-2xl border
-                        border-slate-700 bg-[#111827] p-6 shadow-2xl">
-
-                            <div className="flex items-center gap-3 mb-5">
-
-                                <FileCheck2 className="text-amber-400" size={24} />
-
-                                <h2 className="text-lg font-semibold text-white">
-                                    Generate Audit Report?
-                                </h2>
-
-                            </div>
-
-                            <div className="rounded-xl border border-amber-500/20
-                            bg-amber-500/5 p-4">
-
-                                <p className="text-sm text-slate-200 leading-6">
-                                    Once you generate the report, this audit will be
-                                    finalized. You will no longer be able to modify
-                                    or save checklist responses.
-
-                                    The audit will appear in the Completed Audits section.
-                                </p>
-
-                            </div>
-
-                            <div className="flex justify-end gap-3 mt-6">
-
-                                <button
-                                    onClick={() => setShowGenerateModal(false)}
-                                    disabled={generatingReport}
-                                    className="px-4 py-2 rounded-lg border
-                               border-slate-600 text-slate-300"
-                                >
-                                    Cancel
-                                </button>
-
-                                <button
-                                    onClick={handleGenerateReport}
-                                    disabled={generatingReport}
-                                    className="px-4 py-2 rounded-lg bg-indigo-600
-                               text-white hover:bg-indigo-500"
-                                >
-                                    {generatingReport ? (
-                                        <span className="flex items-center gap-2">
-                                            <LoaderCircle size={15} className="animate-spin" />
-                                            Generating...
-                                        </span>
-                                    ) : (
-                                        "Yes, Generate Report"
-                                    )}
-                                </button>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-                )
-            }
-
-            <div className="max-w-7xl mx-auto">
-
-
-                {/* BACK NAVIGATION */}
-
-                <button
-                    onClick={() => navigate(-1)}
-                    className="flex items-center gap-2 text-indigo-400
-                               hover:text-indigo-300 mb-7"
-                >
-
-                    <ArrowLeft size={18} />
-
-                    Back to Accepted Audits
-
-                </button>
-
-
-                {/* PAGE HEADER */}
-
-                <div className="flex flex-col md:flex-row
-                                md:items-center justify-between gap-4 mb-7">
-
-                    <div>
-
-                        <h1 className="text-2xl font-bold text-white">
-                            Auditor Checklist
-                        </h1>
-
-                        <p className="text-sm text-slate-400 mt-2">
-                            Public Audit ID: {audit?.public_audit_id}
-                        </p>
-
-                    </div>
-
-
-                    {/* <button
-                        onClick={fetchAuditDetails}
-                        disabled={savingId !== null}
-                        className="flex items-center justify-center gap-2
-                                   px-4 py-2 rounded-lg border
-                                   border-slate-700 text-slate-300
-                                   hover:bg-slate-800 disabled:opacity-50"
+        <div className="w-full min-w-0 text-slate-900">
+            {/* Report generation confirmation: preserves original finalization flow */}
+            {showGenerateModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/55 p-4 backdrop-blur-[2px]">
+                    <div
+                        className="w-full max-w-lg overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="generate-report-title"
                     >
-                        <RefreshCw size={15} />
-                        Refresh
-                    </button> */}
-
-                    <div className="flex items-center gap-3">
-
-                        {!reportGenerated && (
+                        <div className="flex items-start justify-between gap-3 border-b border-slate-200 p-6">
+                            <div className="flex items-center gap-3">
+                                <div className="rounded-xl bg-blue-50 p-3 text-blue-700">
+                                    <FileCheck2 size={22} aria-hidden="true" />
+                                </div>
+                                <div>
+                                    <p className="mb-1 text-xs font-bold uppercase tracking-wider text-slate-500">Audit finalization</p>
+                                    <h2 id="generate-report-title" className="text-lg font-semibold text-slate-900">Generate audit report?</h2>
+                                </div>
+                            </div>
                             <button
-                                onClick={() => setShowGenerateModal(true)}
-                                disabled={savingId !== null || progress.unsaved > 0}
-                                className="flex items-center gap-2 px-4 py-2 rounded-lg
-                       bg-indigo-600 text-white hover:bg-indigo-500
-                       disabled:opacity-50"
+                                type="button"
+                                aria-label="Close dialog"
+                                disabled={generatingReport}
+                                onClick={() => setShowGenerateModal(false)}
+                                className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-50"
                             >
-                                <FileCheck2 size={16} />
-                                Generate Report
+                                <X size={19} aria-hidden="true" />
                             </button>
-                        )}
+                        </div>
 
-                        <button
-                            onClick={fetchAuditDetails}
-                            disabled={savingId !== null || generatingReport}
-                            className="flex items-center gap-2 px-4 py-2 rounded-lg
-                   border border-slate-700 text-slate-300
-                   hover:bg-slate-800"
-                        >
-                            <RefreshCw size={15} />
-                            Refresh
-                        </button>
-
-                    </div>
-
-                </div>
-
-
-                {/* PROGRESS CARD */}
-
-                <div className="bg-[#111827] border border-slate-700
-                                rounded-xl p-5 mb-6">
-
-                    <div className="flex flex-wrap justify-between
-                                    items-center gap-3 mb-4">
-
-                        <div className="flex items-center gap-3">
-
-                            <ClipboardList
-                                size={22}
-                                className="text-indigo-400"
-                            />
-
-                            <div>
-
-                                <h2 className="font-semibold text-white">
-                                    Audit Completion
-                                </h2>
-
-                                <p className="text-xs text-slate-400 mt-1">
-                                    Saved checklist responses
-                                </p>
-
+                        <div className="p-6">
+                            <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-7 text-amber-950">
+                                Once you generate the report, this audit will be finalized. You will no longer be able to modify or save checklist responses. The audit will appear in the Completed Audits section.
                             </div>
-
                         </div>
 
-
-                        <span className="text-2xl font-bold text-indigo-400">
-                            {progress.percentage}%
-                        </span>
-
+                        <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
+                            <button
+                                type="button"
+                                onClick={() => setShowGenerateModal(false)}
+                                disabled={generatingReport}
+                                className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleGenerateReport}
+                                disabled={generatingReport}
+                                className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {generatingReport ? (
+                                    <><LoaderCircle size={16} className="animate-spin" /> Generating...</>
+                                ) : (
+                                    <><FileCheck2 size={16} /> Generate report</>
+                                )}
+                            </button>
+                        </div>
                     </div>
+                </div>
+            )}
 
-
-                    {/* PROGRESS BAR */}
-
-                    <div className="w-full bg-slate-800 rounded-full h-3 overflow-hidden">
-
-                        <div
-                            className="bg-indigo-500 h-3 rounded-full
-                                       transition-all duration-300"
-                            style={{
-                                width: `${progress.percentage}%`,
-                            }}
-                        />
-
-                    </div>
-
-
-                    {/* COUNTERS */}
-
-                    <div className="grid grid-cols-2 md:grid-cols-4
-                                    gap-4 mt-5">
-
-                        <div>
-
-                            <p className="text-xl font-bold text-white">
-                                {progress.total}
-                            </p>
-
-                            <p className="text-xs text-slate-400">
-                                Total Questions
-                            </p>
-
-                        </div>
-
-
-                        <div>
-
-                            <p className="text-xl font-bold text-emerald-400">
-                                {progress.completed}
-                            </p>
-
-                            <p className="text-xs text-slate-400">
-                                Saved Responses
-                            </p>
-
-                        </div>
-
-
-                        <div>
-
-                            <p className="text-xl font-bold text-amber-400">
-                                {progress.pending}
-                            </p>
-
-                            <p className="text-xs text-slate-400">
-                                Remaining
-                            </p>
-
-                        </div>
-
-
-                        <div>
-
-                            <p className="text-xl font-bold text-indigo-400">
-                                {progress.unsaved}
-                            </p>
-
-                            <p className="text-xs text-slate-400">
-                                Unsaved Changes
-                            </p>
-
-                        </div>
-
-                    </div>
-
+            <div className="mx-auto w-full max-w-[1500px] space-y-6">
+                {/* Navigation and page identity */}
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    <button
+                        type="button"
+                        onClick={() => navigate(-1)}
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-blue-700 hover:text-blue-800"
+                    >
+                        <ArrowLeft size={17} /> Back
+                    </button>
+                    <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600">
+                        Auditor Workspace
+                    </span>
                 </div>
 
+                <header className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_2px_12px_rgba(15,23,42,0.035)] md:p-7">
+                    <div className="flex flex-col justify-between gap-5 lg:flex-row lg:items-center">
+                        <div className="flex min-w-0 items-start gap-4">
+                            <div className="shrink-0 rounded-xl border border-blue-100 bg-blue-50 p-3 text-blue-700">
+                                <ClipboardList size={24} aria-hidden="true" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="mb-1 text-xs font-bold uppercase tracking-[0.1em] text-slate-500">Audit management</p>
+                                <h1 className="text-2xl font-bold tracking-tight text-slate-900 md:text-[28px]">Auditor Checklist</h1>
+                                <p className="mt-2 break-all text-sm text-slate-500">
+                                    Public Audit ID: <span className="font-semibold text-slate-700">{audit?.public_audit_id || publicAuditId}</span>
+                                </p>
+                            </div>
+                        </div>
 
-                {/* NOTIFICATION */}
+                        <div className="flex flex-wrap gap-2 sm:gap-3">
+                            {!reportGenerated && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowGenerateModal(true)}
+                                    disabled={savingId !== null || progress.unsaved > 0}
+                                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                    <FileCheck2 size={17} /> Generate Report
+                                </button>
+                            )}
+                            <button
+                                type="button"
+                                onClick={fetchAuditDetails}
+                                disabled={savingId !== null || generatingReport}
+                                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                <RefreshCw size={17} /> Refresh
+                            </button>
+                        </div>
+                    </div>
+                </header>
 
-                {notification.message && (
-
-                    <div className={`mb-5 p-4 rounded-lg border text-sm
-                        ${notification.type === "success"
-                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                            : notification.type === "error"
-                                ? "bg-red-500/10 border-red-500/20 text-red-400"
-                                : "bg-indigo-500/10 border-indigo-500/20 text-indigo-400"
-                        }`}
-                    >
-
-                        {notification.message}
-
+                {/* Progress figures are calculated from last successfully saved responses */}
+                <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_2px_12px_rgba(15,23,42,0.035)] md:p-6" aria-labelledby="audit-progress-heading">
+                    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <span className="rounded-xl bg-blue-50 p-2.5 text-blue-700"><ClipboardList size={22} /></span>
+                            <div>
+                                <h2 id="audit-progress-heading" className="text-base font-bold text-slate-900 md:text-lg">Audit Completion</h2>
+                                <p className="mt-1 text-sm text-slate-500">Progress based on saved checklist responses</p>
+                            </div>
+                        </div>
+                        <span className="text-2xl font-bold tabular-nums text-blue-800 md:text-3xl">{progress.percentage}%</span>
                     </div>
 
+                    <div
+                        className="h-2.5 overflow-hidden rounded-full bg-slate-100"
+                        role="progressbar"
+                        aria-label="Audit completion"
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={progress.percentage}
+                    >
+                        <div className="h-full rounded-full bg-blue-700 transition-[width] duration-300" style={{ width: `${progress.percentage}%` }} />
+                    </div>
+
+                    <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                            <p className="text-2xl font-bold tabular-nums text-slate-900">{progress.total}</p>
+                            <p className="mt-1 text-xs font-medium text-slate-600 sm:text-sm">Total Questions</p>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                            <p className="text-2xl font-bold tabular-nums text-emerald-700">{progress.completed}</p>
+                            <p className="mt-1 text-xs font-medium text-slate-600 sm:text-sm">Saved Responses</p>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                            <p className="text-2xl font-bold tabular-nums text-amber-700">{progress.pending}</p>
+                            <p className="mt-1 text-xs font-medium text-slate-600 sm:text-sm">Remaining</p>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                            <p className="text-2xl font-bold tabular-nums text-blue-700">{progress.unsaved}</p>
+                            <p className="mt-1 text-xs font-medium text-slate-600 sm:text-sm">Unsaved Changes</p>
+                        </div>
+                    </div>
+                </section>
+
+                {/* Feedback */}
+                {notification.message && (
+                    <div
+                        role="status"
+                        className={`rounded-xl border p-4 text-sm leading-6 ${notification.type === "success"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                            : notification.type === "error"
+                                ? "border-red-200 bg-red-50 text-red-800"
+                                : "border-blue-200 bg-blue-50 text-blue-800"
+                            }`}
+                    >
+                        {notification.message}
+                    </div>
                 )}
 
-
-                {/* DOMAIN ACCORDIONS */}
-
+                {/* Checklist domains */}
                 <div className="space-y-4">
-
                     {domains.length > 0 ? (
-
                         domains.map((domain, index) => (
-
                             <DomainAccordion
-
                                 key={domain.domain_id}
-
                                 domain={domain}
-
                                 responses={responses}
-
                                 savedResponses={savedResponses}
-
                                 onChange={handleResponseChange}
-
                                 onSave={handleSaveRow}
-
                                 onClear={handleClearRow}
-
                                 isDirty={isResponseDirty}
-
                                 savingId={savingId}
-
                                 defaultOpen={index === 0}
-
                             />
-
                         ))
-
                     ) : (
-
-                        <div className="bg-[#111827] border border-slate-700
-                                        rounded-xl p-8 text-center">
-
-                            <CheckCircle2
-                                size={30}
-                                className="mx-auto text-slate-500 mb-3"
-                            />
-
-                            <p className="text-slate-400">
-                                No checklist items found for this audit.
-                            </p>
-
+                        <div className="rounded-2xl border border-slate-200 bg-white px-5 py-10 text-center">
+                            <CheckCircle2 size={32} className="mx-auto mb-3 text-slate-400" />
+                            <p className="text-sm text-slate-600">No checklist items found for this audit.</p>
                         </div>
-
                     )}
-
                 </div>
 
-
-                {/* FOOTER */}
-
-                <div className="mt-8 p-4 rounded-xl bg-[#111827]
-                                border border-slate-700">
-
-                    <p className="text-xs text-slate-400 leading-6">
-
-                        Each checklist response must be saved individually.
-                        Previously saved responses are retained when you
-                        reopen this audit. Unsaved changes will not be
-                        submitted automatically.
-
+                {/* Save guidance */}
+                <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+                    <AlertCircle size={18} className="mt-0.5 shrink-0 text-slate-500" aria-hidden="true" />
+                    <p>
+                        Each checklist response must be saved individually. Previously saved responses are retained when you reopen this audit. Unsaved changes will not be submitted automatically.
                     </p>
-
                 </div>
-
             </div>
-
         </div>
-
     );
-
 }

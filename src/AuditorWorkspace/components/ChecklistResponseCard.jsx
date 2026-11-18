@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import {
     ChevronDown,
@@ -31,8 +30,7 @@ export default function ChecklistResponseCard({
     };
 
     return (
-        <div className="rounded-xl border border-slate-700
-            bg-[#0b1220] overflow-hidden">
+        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-[0_1px_5px_rgba(15,23,42,0.025)]">
 
             {/* CHECKLIST HEADER */}
 
@@ -40,18 +38,18 @@ export default function ChecklistResponseCard({
                 type="button"
                 onClick={() => setOpen(prev => !prev)}
                 className="w-full flex items-center justify-between
-                    gap-3 p-4 text-left hover:bg-slate-800/50"
+                    gap-3 p-4 text-left hover:bg-slate-100"
             >
                 <div className="min-w-0">
 
                     <div className="flex flex-wrap items-center gap-2">
 
-                        <span className="text-sm font-semibold text-white">
+                        <span className="text-base font-semibold text-slate-900">
                             {item.code || item.clause}
                         </span>
 
                         {isSaved && !isDirty && (
-                            <span className="text-xs text-emerald-400
+                            <span className="text-xs text-emerald-700
                                 flex items-center gap-1">
                                 <CheckCircle2 size={13} />
                                 Saved
@@ -59,7 +57,7 @@ export default function ChecklistResponseCard({
                         )}
 
                         {isDirty && (
-                            <span className="text-xs text-amber-400
+                            <span className="text-xs text-amber-700
                                 flex items-center gap-1">
                                 <Clock size={13} />
                                 Unsaved changes
@@ -68,33 +66,31 @@ export default function ChecklistResponseCard({
 
                     </div>
 
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs md:text-sm text-slate-500 mt-1">
                         Version: {item.version || "1.0"}
                     </p>
 
                 </div>
 
                 {open
-                    ? <ChevronUp size={19} className="text-slate-400" />
-                    : <ChevronDown size={19} className="text-slate-400" />
+                    ? <ChevronUp size={19} className="text-slate-500" />
+                    : <ChevronDown size={19} className="text-slate-500" />
                 }
             </button>
 
             {open && (
-                <div className="border-t border-slate-700 p-4 md:p-5
+                <div className="border-t border-slate-200 p-4 md:p-5
                     space-y-5">
 
                     {/* DESCRIPTION */}
 
                     {item.description && (
                         <div>
-                            <h4 className="text-xs font-semibold
-                                text-indigo-400 uppercase mb-2">
+                            <h4 className="text-xs font-bold tracking-wider text-blue-800 uppercase mb-2">
                                 Compliance Requirement
                             </h4>
 
-                            <p className="text-sm text-slate-300 leading-6
-                                whitespace-pre-wrap">
+                            <p className="text-sm md:text-base text-slate-700 leading-7 whitespace-pre-wrap">
                                 {item.description}
                             </p>
                         </div>
@@ -104,19 +100,16 @@ export default function ChecklistResponseCard({
 
                     <div>
                         <label className="block text-sm font-medium
-                            text-slate-300 mb-2">
+                            text-slate-700 mb-2">
                             Compliance Status
-                            <span className="text-red-400 ml-1">*</span>
+                            <span className="text-red-700 ml-1">*</span>
                         </label>
 
                         <select
                             value={response.status || ""}
                             onChange={e => updateField("status", e.target.value)}
                             disabled={saving}
-                            className="w-full rounded-lg bg-[#111827]
-        border border-slate-700 px-3 py-3
-        text-sm text-white outline-none
-        focus:border-indigo-500"
+                            className="w-full rounded-lg bg-white border border-slate-300 px-3 py-3 text-sm md:text-base text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
                         >
                             <option value="">Select status</option>
 
@@ -132,7 +125,7 @@ export default function ChecklistResponseCard({
 
                     <div>
                         <label className="block text-sm font-medium
-                            text-slate-300 mb-2">
+                            text-slate-700 mb-2">
                             Auditor Comments
                         </label>
 
@@ -144,11 +137,7 @@ export default function ChecklistResponseCard({
                             disabled={saving}
                             rows={4}
                             placeholder="Enter your observations, findings and recommendations..."
-                            className="w-full rounded-lg bg-[#111827]
-                                border border-slate-700 px-3 py-3
-                                text-sm text-white placeholder-slate-500
-                                outline-none resize-y
-                                focus:border-indigo-500"
+                            className="w-full rounded-lg bg-white border border-slate-300 px-3 py-3 text-sm md:text-base text-slate-900 placeholder-slate-400 outline-none resize-y focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
                         />
                     </div>
 
@@ -165,16 +154,15 @@ export default function ChecklistResponseCard({
 
                     {/* ACTIONS */}
 
-                    <div className="flex flex-wrap justify-end gap-3
-                        border-t border-slate-800 pt-4">
+                    <div className="flex flex-wrap justify-end gap-3 border-t border-slate-200 pt-5">
 
                         <button
                             type="button"
                             onClick={() => onClear(item)}
                             disabled={saving || !isDirty}
                             className="flex items-center gap-2 px-4 py-2
-                                rounded-lg border border-slate-600
-                                text-slate-300 hover:bg-slate-800
+                                rounded-lg border border-slate-300
+                                text-slate-700 hover:bg-slate-100
                                 disabled:opacity-40"
                         >
                             <RotateCcw size={15} />
@@ -185,10 +173,7 @@ export default function ChecklistResponseCard({
                             type="button"
                             onClick={() => onSave(item)}
                             disabled={saving || !isDirty}
-                            className="flex items-center gap-2 px-4 py-2
-                                rounded-lg bg-indigo-600 text-white
-                                hover:bg-indigo-500
-                                disabled:opacity-40"
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             <Save size={15} />
                             {saving ? "Saving..." : "Save Response"}

@@ -1,4 +1,3 @@
-
 import { useRef, useState } from "react";
 import {
     UploadCloud,
@@ -84,9 +83,9 @@ export default function EvidenceUploader({
             {/* SECTION HEADING */}
 
             <div className="flex items-center gap-2">
-                <Paperclip size={17} className="text-indigo-400" />
+                <Paperclip size={17} className="text-blue-700" />
 
-                <h4 className="text-sm font-semibold text-slate-200">
+                <h4 className="text-sm md:text-base font-semibold text-slate-800">
                     Evidence & Attachments
                 </h4>
 
@@ -100,7 +99,7 @@ export default function EvidenceUploader({
             {existingEvidence.length > 0 && (
                 <div className="space-y-2">
 
-                    <p className="text-xs font-medium text-slate-400">
+                    <p className="text-xs font-medium text-slate-500">
                         Previously uploaded evidence
                     </p>
 
@@ -109,17 +108,15 @@ export default function EvidenceUploader({
                         {existingEvidence.map((file, index) => (
                             <div
                                 key={file.id || index}
-                                className="flex items-center justify-between gap-3
-                                    rounded-lg border border-slate-700
-                                    bg-slate-800/60 px-3 py-3"
+                                className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3"
                             >
                                 <div className="flex items-center gap-3 min-w-0">
-                                    <div className="text-indigo-400 shrink-0">
+                                    <div className="text-blue-700 shrink-0">
                                         {getFileIcon(file.name || "file")}
                                     </div>
 
                                     <div className="min-w-0">
-                                        <p className="text-sm text-slate-200 truncate">
+                                        <p className="text-sm font-medium text-slate-800 truncate">
                                             {file.name || `Evidence ${index + 1}`}
                                         </p>
 
@@ -135,7 +132,7 @@ export default function EvidenceUploader({
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="shrink-0 p-2 rounded-md
-                                            text-indigo-400 hover:bg-indigo-500/10"
+                                            text-blue-700 hover:bg-blue-50"
                                         title="Open evidence"
                                     >
                                         <ExternalLink size={16} />
@@ -157,14 +154,7 @@ export default function EvidenceUploader({
                 }}
                 onDragLeave={() => setDragging(false)}
                 onDrop={handleDrop}
-                className={`rounded-xl border-2 border-dashed
-                    p-5 md:p-6 transition
-                    ${dragging
-                        ? "border-indigo-400 bg-indigo-500/10"
-                        : "border-slate-700 bg-[#111827] hover:border-indigo-500/70"
-                    }
-                    ${disabled ? "opacity-50" : ""}
-                `}
+                className={`rounded-xl border-2 border-dashed p-5 md:p-6 transition-colors ${dragging ? "border-blue-500 bg-blue-50" : "border-slate-300 bg-slate-50 hover:border-blue-400"} ${disabled ? "opacity-50" : ""}`}
             >
                 <div className="flex flex-col sm:flex-row
                     sm:items-center justify-between gap-4">
@@ -172,17 +162,17 @@ export default function EvidenceUploader({
                     <div className="flex items-center gap-4">
 
                         <div className="w-12 h-12 rounded-xl
-                            bg-indigo-500/10 flex items-center
-                            justify-center text-indigo-400 shrink-0">
+                            bg-blue-50 flex items-center
+                            justify-center text-blue-700 shrink-0">
                             <UploadCloud size={25} />
                         </div>
 
                         <div>
-                            <p className="text-sm font-semibold text-slate-200">
+                            <p className="text-sm md:text-base font-semibold text-slate-800">
                                 Attach supporting evidence
                             </p>
 
-                            <p className="text-xs text-slate-400 mt-1">
+                            <p className="text-xs text-slate-500 mt-1">
                                 Drag and drop files here, or browse your device.
                             </p>
 
@@ -199,12 +189,7 @@ export default function EvidenceUploader({
                         type="button"
                         disabled={disabled}
                         onClick={() => inputRef.current?.click()}
-                        className="inline-flex items-center justify-center
-                            gap-2 px-5 py-2.5 rounded-lg
-                            bg-indigo-600 hover:bg-indigo-500
-                            text-white text-sm font-medium
-                            transition shrink-0
-                            disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold transition shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <FolderOpen size={16} />
                         Browse Files
@@ -230,11 +215,11 @@ export default function EvidenceUploader({
                 <div className="space-y-2">
 
                     <div className="flex items-center justify-between">
-                        <p className="text-xs font-medium text-slate-300">
+                        <p className="text-xs font-medium text-slate-700">
                             Selected files
                         </p>
 
-                        <span className="text-xs text-indigo-400">
+                        <span className="text-xs text-blue-700">
                             {newEvidence.length} file(s)
                         </span>
                     </div>
@@ -244,18 +229,15 @@ export default function EvidenceUploader({
                         {newEvidence.map((file, index) => (
                             <div
                                 key={`${file.name}-${index}`}
-                                className="flex items-center justify-between
-                                    gap-3 rounded-lg border
-                                    border-indigo-500/30 bg-indigo-500/5
-                                    px-3 py-3"
+                                className="flex items-center justify-between gap-3 rounded-lg border border-blue-200 bg-blue-50 px-3 py-3"
                             >
                                 <div className="flex items-center gap-3 min-w-0">
-                                    <div className="text-indigo-400 shrink-0">
+                                    <div className="text-blue-700 shrink-0">
                                         {getFileIcon(file.name)}
                                     </div>
 
                                     <div className="min-w-0">
-                                        <p className="text-sm text-slate-200 truncate">
+                                        <p className="text-sm font-medium text-slate-800 truncate">
                                             {file.name}
                                         </p>
 
@@ -271,8 +253,8 @@ export default function EvidenceUploader({
                                     type="button"
                                     disabled={disabled}
                                     onClick={() => removeNewFile(index)}
-                                    className="p-2 rounded-md text-slate-400
-                                        hover:text-red-400 hover:bg-red-500/10
+                                    className="p-2 rounded-md text-slate-500
+                                        hover:text-red-700 hover:bg-red-500/10
                                         disabled:opacity-50"
                                     title="Remove file"
                                 >
@@ -286,7 +268,7 @@ export default function EvidenceUploader({
             )}
 
             {error && (
-                <p className="text-xs text-red-400">
+                <p className="text-xs text-red-700">
                     {error}
                 </p>
             )}
