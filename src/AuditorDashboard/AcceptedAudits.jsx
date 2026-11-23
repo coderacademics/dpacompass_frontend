@@ -4,7 +4,6 @@ import {
     FiAlertCircle,
     FiArrowLeft,
     FiCalendar,
-    FiCheckCircle,
     FiChevronDown,
     FiChevronLeft,
     FiChevronRight,
@@ -16,6 +15,7 @@ import {
     FiRefreshCw,
     FiSearch,
     FiShield,
+    FiCheckCircle
 } from "react-icons/fi";
 
 import { fetchWithAuth } from "../utilities/fetchWithAuth";
@@ -73,7 +73,6 @@ const pageStyles = String.raw`
 .aa-app-id { margin-top: 4px; font-size: 11px; color: #74889b; overflow-wrap: anywhere; }
 .aa-expand { display: inline-flex; align-items: center; gap: 5px; margin-top: 7px; padding: 0; color: var(--aa-blue); background: transparent; border: 0; font-size: 12px; font-weight: 650; cursor: pointer; }
 .aa-date { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; }
-.aa-status { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid #bde6ce; border-radius: 999px; background: #effaf3; color: #166a47; font-size: 12px; font-weight: 750; }
 .aa-open { display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px 13px; min-height: 37px; border-radius: 8px; border: 1px solid #c9dff3; background: #eef5fd; color: #205b90; font-weight: 700; font-size: 12px; cursor: pointer; white-space: nowrap; }
 .aa-open:hover:not(:disabled) { background: #dcecfb; border-color: #a8c8e5; }
 .aa-details-row td { padding: 0 17px 15px; background: #f9fbfe; }
@@ -369,9 +368,8 @@ export default function AcceptedAudits() {
                                 <thead>
                                     <tr>
                                         <th scope="col">Application</th>
-                                        <th scope="col">Auditor</th>
+                                        {/* <th scope="col">Auditor</th> */}
                                         <th scope="col">Assignment date</th>
-                                        <th scope="col">Status</th>
                                         <th scope="col" style={{ textAlign: "right" }}>Action</th>
                                     </tr>
                                 </thead>
@@ -399,9 +397,8 @@ export default function AcceptedAudits() {
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td>{audit.auditor_name}</td>
+                                                    {/* <td>{audit.auditor_name}</td> */}
                                                     <td><span className="aa-date"><FiCalendar aria-hidden="true" />{formatDate(audit.created_at)}</span></td>
-                                                    <td><span className="aa-status"><FiCheckCircle aria-hidden="true" />Accepted</span></td>
                                                     <td style={{ textAlign: "right" }}>
                                                         <button
                                                             type="button"
@@ -415,7 +412,7 @@ export default function AcceptedAudits() {
                                                     </td>
                                                 </tr>
                                                 {isExpanded && (
-                                                    <tr className="aa-details-row"><td colSpan={5}><Details audit={audit} /></td></tr>
+                                                    <tr className="aa-details-row"><td colSpan={3}><Details audit={audit} /></td></tr>
                                                 )}
                                             </Fragment>
                                         );
@@ -437,7 +434,6 @@ export default function AcceptedAudits() {
                                                     <div className="aa-app-id">Application ID: {audit.application_id ?? "N/A"}</div>
                                                 </div>
                                             </div>
-                                            <span className="aa-status"><FiCheckCircle aria-hidden="true" />Accepted</span>
                                         </div>
                                         <dl className="aa-mobile-meta">
                                             <div><dt>Auditor</dt><dd>{audit.auditor_name}</dd></div>

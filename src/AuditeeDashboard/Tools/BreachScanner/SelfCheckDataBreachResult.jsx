@@ -1,15 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    ArrowLeft,
-    CheckCircle2,
+    AlertCircle,
     AlertTriangle,
-    XCircle,
-    Info,
-    Globe,
-    Clock3,
-    RefreshCw,
+    CheckCircle2,
     ChevronDown,
+    ChevronRight,
+    Clock3,
+    FileCheck2,
+    Globe,
+    Info,
+    RefreshCw,
+    ShieldAlert,
+    ShieldCheck,
+    XCircle,
 } from "lucide-react";
 import {
     breachApi,
@@ -18,11 +21,8 @@ import {
 
 const formatDate = (value) => {
     if (!value) return "Not available";
-
     const date = new Date(value);
-    return Number.isNaN(date.getTime())
-        ? "Not available"
-        : date.toLocaleString();
+    return Number.isNaN(date.getTime()) ? "Not available" : date.toLocaleString();
 };
 
 const titleCase = (value = "") =>
@@ -30,173 +30,216 @@ const titleCase = (value = "") =>
         .replaceAll("_", " ")
         .replace(/\b\w/g, (character) => character.toUpperCase());
 
+const checklistStatus = (status = "NOT_EVALUATED") => {
+    const key = String(status).toUpperCase();
+    const map = {
+        COMPLIANT: {
+            label: "Compliant",
+            tone: "emerald",
+            icon: CheckCircle2,
+            classes: "border-emerald-200 bg-emerald-50 text-emerald-700",
+            dot: "bg-emerald-500",
+        },
+        NON_COMPLIANT: {
+            label: "Non-compliant",
+            tone: "red",
+            icon: XCircle,
+            classes: "border-red-200 bg-red-50 text-red-700",
+            dot: "bg-red-500",
+        },
+        PARTIALLY_COMPLIANT: {
+            label: "Partially compliant",
+            tone: "amber",
+            icon: AlertTriangle,
+            classes: "border-amber-200 bg-amber-50 text-amber-800",
+            dot: "bg-amber-500",
+        },
+        REVIEW: {
+            label: "Requires review",
+            tone: "blue",
+            icon: Info,
+            classes: "border-blue-200 bg-blue-50 text-blue-700",
+            dot: "bg-blue-500",
+        },
+        NOT_APPLICABLE: {
+            label: "Not applicable",
+            tone: "violet",
+            icon: Info,
+            classes: "border-violet-200 bg-violet-50 text-violet-700",
+            dot: "bg-violet-500",
+        },
+        NOT_EVALUATED: {
+            label: "Not evaluated",
+            tone: "slate",
+            icon: Clock3,
+            classes: "border-slate-200 bg-slate-100 text-slate-600",
+            dot: "bg-slate-400",
+        },
+    };
+    return map[key] || map.NOT_EVALUATED;
+};
+
 const severityClass = (severity = "") => {
     switch (String(severity).toUpperCase()) {
-        case "CRITICAL":
-            return "border-red-200 bg-red-50 text-red-700";
-        case "HIGH":
-            return "border-orange-200 bg-orange-50 text-orange-700";
-        case "MEDIUM":
-            return "border-amber-200 bg-amber-50 text-amber-700";
-        case "LOW":
-            return "border-sky-200 bg-sky-50 text-sky-700";
-        default:
-            return "border-slate-200 bg-slate-100 text-slate-500";
+        case "CRITICAL": return "border-red-200 bg-red-50 text-red-700";
+        case "HIGH": return "border-orange-200 bg-orange-50 text-orange-700";
+        case "MEDIUM": return "border-amber-200 bg-amber-50 text-amber-700";
+        case "LOW": return "border-sky-200 bg-sky-50 text-sky-700";
+        default: return "border-slate-200 bg-slate-100 text-slate-600";
     }
 };
 
-const assessmentStyle = (assessment = "") => {
-    switch (String(assessment).toUpperCase()) {
-        case "PASS":
-            return {
-                icon: CheckCircle2,
-                text: "Passed",
-                className: "text-emerald-700",
-            };
-        case "PARTIAL":
-        case "WARNING":
-            return {
-                icon: AlertTriangle,
-                text: "Needs attention",
-                className: "text-amber-700",
-            };
-        case "FAIL":
-            return {
-                icon: XCircle,
-                text: "Not passed",
-                className: "text-red-700",
-            };
-        default:
-            return {
-                icon: Info,
-                text: titleCase(assessment || "Not assessed"),
-                className: "text-slate-500",
-            };
-    }
-};
-
-function MetricCard({ label, value, helper }) {
+function StatusBadge({ status }) {
+    const config = checklistStatus(status);
+    const Icon = config.icon;
     return (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-sm text-slate-500">{label}</p>
-            <p className="mt-2 text-2xl font-semibold text-[#14213D]">{value}</p>
-            {helper && <p className="mt-1 text-xs text-slate-500">{helper}</p>}
-        </div>
+        <span className={`inline-flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold ${config.classes}`}>
+            <Icon size={13} />
+            {config.label}
+        </span>
     );
 }
 
-function ScannerResult({ scanner }) {
-    const assessment = assessmentStyle(
-        scanner.assessment || scanner.status
-    );
-    const AssessmentIcon = assessment.icon;
-    const issues = Array.isArray(scanner.issues) ? scanner.issues : [];
-
-    return (
-        <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+function SummaryCard({ label, value, hint, icon: Icon, accent = "slate", active, onClick }) {
+    const accents = {
+        slate: "text-slate-700 bg-slate-100",
+        emerald: "text-emerald-700 bg-emerald-100/80",
+        red: "text-rose-700 bg-rose-100/80",
+        amber: "text-amber-700 bg-amber-100/80",
+        blue: "text-sky-700 bg-sky-100/80",
+        violet: "text-violet-700 bg-violet-100/80",
+    };
+    const surfaces = {
+        slate: "from-slate-50 to-white border-slate-200",
+        emerald: "from-emerald-50/90 to-white border-emerald-100",
+        red: "from-rose-50/90 to-white border-rose-100",
+        amber: "from-amber-50/90 to-white border-amber-100",
+        blue: "from-sky-50/90 to-white border-sky-100",
+        violet: "from-violet-50/90 to-white border-violet-100",
+    };
+    const content = (
+        <>
+            <div className="flex items-start justify-between gap-3">
                 <div>
-                    <h4 className="font-semibold text-slate-800">
-                        {titleCase(scanner.scanner)}
-                    </h4>
-                    <div className={`mt-2 flex items-center gap-2 text-sm ${assessment.className}`}>
-                        <AssessmentIcon size={16} />
-                        {assessment.text}
-                    </div>
+                    <p className="text-xs font-medium text-slate-500">{label}</p>
+                    <p className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{value ?? 0}</p>
                 </div>
-
-                <div className="text-left sm:text-right">
-                    <p className="text-lg font-semibold text-[#14213D]">
-                        {scanner.score ?? "—"}
-                        <span className="text-sm font-normal text-slate-500">
-                            {" "}/ {scanner.max_score ?? "—"}
-                        </span>
-                    </p>
-                    <p className="text-xs text-slate-500">Assessment score</p>
-                </div>
+                {Icon && <span className={`rounded-xl p-2.5 shadow-sm transition-transform duration-300 group-hover:scale-110 ${accents[accent] || accents.slate}`}><Icon size={19} /></span>}
             </div>
+            {hint && <p className="mt-2 text-xs text-slate-500">{hint}</p>}
+        </>
+    );
+    const className = `group rounded-2xl border bg-gradient-to-br p-4 text-left shadow-sm transition-all duration-300 ease-out ${surfaces[accent] || surfaces.slate} ${active ? "-translate-y-0.5 ring-2 ring-sky-200 shadow-md" : ""} ${onClick ? "cursor-pointer hover:-translate-y-1 hover:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-400" : ""} animate-card-in`;
+    return onClick ? <button type="button" onClick={onClick} className={className}>{content}</button> : <div className={className}>{content}</div>;
+}
 
-            {issues.length > 0 ? (
-                <div className="mt-4 space-y-3">
-                    {issues.map((issue, index) => (
-                        <div
-                            key={`${issue.title || "issue"}-${index}`}
-                            className="rounded-lg border border-slate-200 bg-[#F4F7FB] p-3"
-                        >
-                            <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-sm font-medium text-slate-700">
-                                    {issue.title || "Finding"}
-                                </p>
-                                {issue.severity && (
-                                    <span
-                                        className={`rounded-full border px-2 py-0.5 text-[11px] ${severityClass(issue.severity)}`}
-                                    >
-                                        {titleCase(issue.severity)}
-                                    </span>
-                                )}
-                            </div>
-
-                            {issue.description && (
-                                <p className="mt-2 text-sm leading-6 text-slate-500">
-                                    {issue.description}
-                                </p>
-                            )}
-
-                            {issue.recommendation && (
-                                <div className="mt-3 rounded-lg bg-blue-50 p-3">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-[#075EB5]">
-                                        Recommended action
-                                    </p>
-                                    <p className="mt-1 text-sm leading-6 text-slate-500">
-                                        {issue.recommendation}
-                                    </p>
-                                </div>
-                            )}
+function ChecklistItem({ item, expanded, onToggle }) {
+    const checklist = item?.checklist || item || {};
+    const status = String(checklist.status || "NOT_EVALUATED").toUpperCase();
+    return (
+        <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-all duration-300 hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md">
+            <button
+                type="button"
+                onClick={onToggle}
+                aria-expanded={expanded}
+                className="flex w-full items-start gap-3 p-4 text-left sm:items-center"
+            >
+                <span className={`mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full ${checklistStatus(status).dot}`} />
+                <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-2">
+                        <span className="text-xs font-bold tracking-wide text-slate-500">{checklist.code || "Checklist item"}</span>
+                        {checklist.clause && <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] text-slate-500">{checklist.clause}</span>}
+                    </span>
+                    <span className="mt-1.5 block text-sm font-medium leading-6 text-slate-800">{checklist.description || "No description available."}</span>
+                </span>
+                <span className="hidden shrink-0 sm:block"><StatusBadge status={status} /></span>
+                <span className="mt-1 shrink-0 text-slate-400">{expanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}</span>
+            </button>
+            <div className="px-4 pb-3 sm:hidden"><StatusBadge status={status} /></div>
+            {expanded && (
+                <div className="animate-card-in border-t border-sky-100 bg-gradient-to-br from-sky-50/60 via-white to-indigo-50/40 px-4 py-4 sm:pl-10">
+                    <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+                        <div>
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Assessment observation</p>
+                            <p className="mt-1.5 whitespace-pre-wrap text-sm leading-6 text-slate-600">
+                                {checklist.comment || "No additional assessment comment was provided."}
+                            </p>
                         </div>
-                    ))}
+                        <div className="text-xs text-slate-400">Version {checklist.version || "—"}</div>
+                    </div>
+                    {status === "NOT_EVALUATED" && (
+                        <div className="mt-3 flex items-start gap-2 rounded-lg border border-slate-200 bg-white p-3 text-xs leading-5 text-slate-600">
+                            <Info size={15} className="mt-0.5 shrink-0 text-slate-400" />
+                            This item was not evaluated by the current scanner. It should not be interpreted as a confirmed compliance failure.
+                        </div>
+                    )}
                 </div>
-            ) : (
-                <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-800">
-                    No issues were reported by this check.
-                </p>
             )}
         </article>
     );
 }
 
-const checklistStatusStyle = (status = "") => {
-    switch (String(status).toUpperCase()) {
-        case "COMPLIANT":
-            return "border-emerald-200 bg-emerald-50 text-emerald-700";
-        case "NON_COMPLIANT":
-            return "border-red-200 bg-red-50 text-red-700";
-        case "PARTIALLY_COMPLIANT":
-            return "border-amber-200 bg-amber-50 text-amber-700";
-        case "REVIEW":
-            return "border-blue-200 bg-blue-50 text-blue-700";
-        case "NOT_APPLICABLE":
-            return "border-violet-200 bg-violet-50 text-violet-700";
-        case "NOT_EVALUATED":
-        default:
-            return "border-slate-200 bg-slate-100 text-slate-500";
-    }
-};
+function ScannerSeverityBadge({ severity }) {
+    const value = String(severity || "").toUpperCase();
+    const styles = {
+        CRITICAL: "border-rose-200 bg-rose-50 text-rose-700",
+        HIGH: "border-orange-200 bg-orange-50 text-orange-700",
+        MEDIUM: "border-amber-200 bg-amber-50 text-amber-700",
+        LOW: "border-sky-200 bg-sky-50 text-sky-700",
+        INFO: "border-slate-200 bg-slate-100 text-slate-600",
+    };
 
-function ChecklistMetric({ label, value, colorClass = "text-[#14213D]" }) {
+    if (!value) {
+        return <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-500">Severity unavailable</span>;
+    }
+
     return (
-        <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <p className="text-xs text-slate-500">{label}</p>
-            <p className={`mt-1 text-2xl font-semibold ${colorClass}`}>
-                {value ?? 0}
-            </p>
-        </div>
+        <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${styles[value] || styles.INFO}`}>
+            {titleCase(value)} severity
+        </span>
     );
 }
 
-export default function SelfCheckDataBreachResult() {
-    const navigate = useNavigate();
-    const { publicAuditId } = useParams();
+function ScannerCard({ scanner, index }) {
+    const [expanded, setExpanded] = useState(false);
+    const issues = Array.isArray(scanner.issues) ? scanner.issues : [];
+    const severityOrder = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"];
+    const issueSeverities = issues
+        .map((issue) => String(issue?.severity || "").toUpperCase())
+        .filter((severity) => severityOrder.includes(severity));
+    // Show the highest severity reported by this scanner, rather than the
+    // checklist-style REVIEW / NOT_EVALUATED status.
+    const highestSeverity = severityOrder.find((severity) => issueSeverities.includes(severity)) || "";
+    return (
+        <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.03)] transition-all duration-300 hover:border-indigo-200 hover:shadow-md">
+            <button type="button" onClick={() => setExpanded((value) => !value)} className="flex w-full items-center gap-3 bg-gradient-to-r from-slate-50/70 to-white p-4 text-left transition-colors hover:from-indigo-50/60">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-700"><ShieldCheck size={18} /></span>
+                <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-semibold text-slate-800">{titleCase(scanner.scanner || `Security check ${index + 1}`)}</span>
+                    <span className="mt-1 block text-xs text-slate-500">{issues.length} {issues.length === 1 ? "finding" : "findings"}</span>
+                </span>
+                <ScannerSeverityBadge severity={highestSeverity} />
+                {expanded ? <ChevronDown size={17} className="text-slate-400" /> : <ChevronRight size={17} className="text-slate-400" />}
+            </button>
+            {expanded && (
+                <div className="animate-card-in space-y-3 border-t border-indigo-100 bg-gradient-to-br from-indigo-50/50 to-white p-4">
+                    {issues.length ? issues.map((issue, issueIndex) => (
+                        <div key={`${issue.title || "finding"}-${issueIndex}`} className="rounded-lg border border-slate-200 bg-white p-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                                <p className="text-sm font-semibold text-slate-800">{issue.title || "Technical finding"}</p>
+                                {issue.severity && <span className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${severityClass(issue.severity)}`}>{titleCase(issue.severity)}</span>}
+                            </div>
+                            {issue.description && <p className="mt-2 text-sm leading-6 text-slate-600">{issue.description}</p>}
+                            {issue.recommendation && <div className="mt-3 rounded-lg bg-blue-50 p-3"><p className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Recommended action</p><p className="mt-1 text-sm leading-6 text-blue-900">{issue.recommendation}</p></div>}
+                        </div>
+                    )) : <p className="text-sm text-slate-500">No findings were reported by this check.</p>}
+                </div>
+            )}
+        </article>
+    );
+}
 
+export default function SelfCheckDataBreachResult({ publicAuditId }) {
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -204,35 +247,36 @@ export default function SelfCheckDataBreachResult() {
     const [checklistReport, setChecklistReport] = useState(null);
     const [checklistLoading, setChecklistLoading] = useState(true);
     const [checklistError, setChecklistError] = useState("");
+    const [filter, setFilter] = useState("ALL");
+    const [expandedItems, setExpandedItems] = useState({});
+    const [technicalOpen, setTechnicalOpen] = useState(true);
 
-    const loadResult = async (manual = false) => {
+    const loadResult = useCallback(async (manual = false) => {
+        if (!publicAuditId) {
+            setError("Public Audit ID is missing.");
+            setLoading(false);
+            setChecklistLoading(false);
+            return;
+        }
         if (manual) setRefreshing(true);
-
         setError("");
         setChecklistError("");
         setLoading(true);
         setChecklistLoading(true);
 
-        // Load technical scan results and checklist assessment independently.
-        // A failure in one endpoint must not prevent the other section loading.
         const technicalRequest = (async () => {
             try {
                 const response = await breachApi(
                     `/api/scanner/webscan/${encodeURIComponent(publicAuditId)}/`,
                     { method: "GET" }
                 );
-
                 if (!response?.success) {
-                    throw new Error(
-                        response?.message ||
-                        response?.error_message ||
-                        "Unable to retrieve the scan result."
-                    );
+                    throw new Error(response?.message || response?.error_message || "Unable to retrieve the scan result.");
                 }
-
                 setResult(response);
             } catch (err) {
-                setError(err?.message || "Unable to load the scan result.");
+                setError(err?.message || "Unable to load the technical scan result.");
+                setResult(null);
             } finally {
                 setLoading(false);
             }
@@ -243,10 +287,7 @@ export default function SelfCheckDataBreachResult() {
                 const data = await getDataBreachChecklistReport(publicAuditId);
                 setChecklistReport(data);
             } catch (err) {
-                console.error("Checklist Report Error:", err);
-                setChecklistError(
-                    err?.message || "Unable to load the checklist assessment."
-                );
+                setChecklistError(err?.message || "Unable to load the checklist assessment.");
                 setChecklistReport(null);
             } finally {
                 setChecklistLoading(false);
@@ -255,455 +296,189 @@ export default function SelfCheckDataBreachResult() {
 
         await Promise.all([technicalRequest, checklistRequest]);
         setRefreshing(false);
-    };
-
-    useEffect(() => {
-        if (!publicAuditId) return;
-
-        loadResult();
-        // The result page is opened for completed scans; refresh is manual.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [publicAuditId]);
 
-    const scan = result?.scan || {};
-    const executionGate = result?.execution_gate || {};
-    const summary = result?.summary || {};
-    const severityCounts = summary.severity_counts || {};
-    const scanners = Array.isArray(result?.scanners) ? result.scanners : [];
-    const indicators = Array.isArray(scan.personal_data_indicators)
-        ? scan.personal_data_indicators
-        : [];
-    const skippedScanners = Array.isArray(summary.skipped_scanners)
-        ? summary.skipped_scanners
-        : [];
+    useEffect(() => {
+        loadResult();
+    }, [loadResult]);
+
+    const checklistItems = useMemo(() => {
+        const items = Array.isArray(checklistReport?.checklists) ? checklistReport.checklists : [];
+        return items.map((item) => item?.checklist || item).filter(Boolean);
+    }, [checklistReport]);
+
+    // Only checklist entries that received an assessment are shown as
+    // crawler-generated/evaluated findings. NOT_EVALUATED entries belong to
+    // the broader checklist catalogue and are not counted as scan findings.
+    const crawlerChecklistItems = useMemo(
+        () => checklistItems.filter(
+            (item) => String(item.status || "NOT_EVALUATED").toUpperCase() !== "NOT_EVALUATED"
+        ),
+        [checklistItems]
+    );
 
     const checklistSummary = checklistReport?.summary || {};
-    const checklistItems = Array.isArray(checklistReport?.checklists)
-        ? checklistReport.checklists
-        : [];
-
-    // Do not display checklist questions that have not been evaluated.
-    const evaluatedChecklistItems = checklistItems.filter((item) => {
-        const checklist = item?.checklist || item || {};
-        return String(checklist.status || "NOT_EVALUATED").toUpperCase() !== "NOT_EVALUATED";
-    });
-
-    const piiSummary = useMemo(() => {
-        if (scan.pii_detected === true) {
-            return {
-                title: "Potential personal information was detected",
-                description:
-                    "The scan found patterns that may represent personal information. Please review the indicators below and confirm them manually.",
-                className: "border-amber-200 bg-amber-50 text-amber-800",
-                icon: AlertTriangle,
-            };
-        }
-
-        return {
-            title: "No personal information patterns were detected",
-            description:
-                "The scan did not identify personal information patterns on the pages it checked. This does not guarantee that the website contains no personal information.",
-            className: "border-sky-200/60 bg-sky-50 text-sky-800",
-            icon: Info,
+    const statusCounts = useMemo(() => {
+        const counts = {
+            COMPLIANT: 0,
+            NON_COMPLIANT: 0,
+            PARTIALLY_COMPLIANT: 0,
+            REVIEW: 0,
+            NOT_EVALUATED: 0,
+            NOT_APPLICABLE: 0,
         };
-    }, [scan.pii_detected]);
+        crawlerChecklistItems.forEach((item) => {
+            const key = String(item.status || "NOT_EVALUATED").toUpperCase();
+            if (key in counts) counts[key] += 1;
+        });
+        return counts;
+    }, [crawlerChecklistItems]);
 
-    const PiiIcon = piiSummary.icon;
+    const filteredItems = useMemo(() => {
+        if (filter === "ALL") return crawlerChecklistItems;
+        return crawlerChecklistItems.filter((item) => String(item.status || "NOT_EVALUATED").toUpperCase() === filter);
+    }, [crawlerChecklistItems, filter]);
+
+    const scan = result?.scan || {};
+    const summary = result?.summary || {};
+    const executionGate = result?.execution_gate || {};
+    const scanners = Array.isArray(result?.scanners) ? result.scanners : [];
+    const indicators = Array.isArray(scan.personal_data_indicators) ? scan.personal_data_indicators : [];
+    const skippedScanners = Array.isArray(summary.skipped_scanners) ? summary.skipped_scanners : [];
+    const severityCounts = summary.severity_counts || {};
+    const piiDetected = scan.pii_detected === true;
+
+    const toggleItem = (id) => setExpandedItems((current) => ({ ...current, [id]: !current[id] }));
+
+    if (loading && !result && checklistLoading) {
+        return (
+            <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+                <RefreshCw size={24} className="mx-auto animate-spin text-blue-600" />
+                <p className="mt-4 text-sm font-medium text-slate-700">Preparing your Data Breach assessment</p>
+                <p className="mt-1 text-xs text-slate-500">Retrieving technical findings and checklist evaluation…</p>
+            </div>
+        );
+    }
 
     return (
-        <div className="min-h-screen bg-[#F4F7FB] px-4 py-6 text-slate-700 sm:px-6 lg:px-8">
-            <div className="mx-auto w-full max-w-[1600px]">
-                <button
-                    type="button"
-                    onClick={() => navigate("/user/self-check/breach-scans")}
-                    className="mb-6 inline-flex cursor-pointer items-center gap-2 text-sm font-medium text-[#075EB5] transition hover:text-[#064D94]"
-                >
-                    <ArrowLeft size={17} />
-                    Back to My Scans
-                </button>
-
-                <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                        <div className="flex items-center gap-2 text-sm text-emerald-700">
-                            <CheckCircle2 size={17} />
-                            Scan completed
+        <div className="space-y-6 text-slate-700">
+            <style>{`
+                @keyframes card-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+                @keyframes bar-grow { from { width: 0; } to { width: var(--bar-width); } }
+                @keyframes soft-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(14,165,233,0); } 50% { box-shadow: 0 0 0 5px rgba(14,165,233,.08); } }
+                .animate-card-in { animation: card-in .45s ease-out both; }
+                .animate-bar-grow { animation: bar-grow .9s cubic-bezier(.2,.8,.2,1) both; }
+                .animate-soft-pulse { animation: soft-pulse 2.8s ease-in-out infinite; }
+                @media (prefers-reduced-motion: reduce) { .animate-card-in, .animate-bar-grow, .animate-soft-pulse { animation: none !important; } }
+            `}</style>
+            <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white p-5 sm:p-6">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                        <div className="flex items-start gap-3">
+                            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><ShieldAlert size={22} /></span>
+                            <div className="min-w-0">
+                                <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">PII-in-Transit Scanner</p>
+                                <h2 className="mt-1 text-xl font-semibold tracking-tight text-slate-900 sm:text-2xl">Data Breach Assessment</h2>
+                                <p className="mt-1 break-all text-sm text-slate-500">{publicAuditId}</p>
+                            </div>
                         </div>
-                        <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">
-                            PII-in-Transit Scanner Scan Result
-                        </h1>
-                        <p className="mt-2 break-all text-sm text-slate-500">
-                            {publicAuditId}
-                        </p>
+                        <button type="button" onClick={() => loadResult(true)} disabled={refreshing || loading} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:border-blue-300 hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-60">
+                            <RefreshCw size={15} className={refreshing ? "animate-spin" : ""} /> Refresh
+                        </button>
                     </div>
-
-                    <button
-                        type="button"
-                        onClick={() => loadResult(true)}
-                        disabled={refreshing || loading}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm transition hover:border-blue-200 hover:bg-blue-50 hover:text-[#075EB5] disabled:opacity-60"
-                    >
-                        <RefreshCw
-                            size={16}
-                            className={refreshing ? "animate-spin" : ""}
-                        />
-                        Refresh Result
-                    </button>
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                        <div className="flex min-w-0 items-center gap-2 text-xs text-slate-500"><Globe size={14} className="shrink-0" /><span className="truncate">{result?.target_url || checklistReport?.audit?.target_url || "Website not available"}</span></div>
+                        <div className="flex items-center gap-2 text-xs text-slate-500"><Clock3 size={14} /><span>Completed: {formatDate(result?.completed_at || checklistReport?.audit?.completed_at)}</span></div>
+                    </div>
                 </div>
 
-                {error && (
-                    <div
-                        role="alert"
-                        className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
-                    >
-                        {error}
+                {(error || checklistError) && (
+                    <div className="space-y-2 p-5">
+                        {error && <div role="alert" className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"><AlertCircle size={17} className="mt-0.5 shrink-0" />{error}</div>}
+                        {checklistError && <div role="alert" className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800"><AlertCircle size={17} className="mt-0.5 shrink-0" />{checklistError}</div>}
                     </div>
                 )}
+            </section>
 
-                {loading ? (
-                    <div className="flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white p-12 text-slate-500">
-                        <RefreshCw size={19} className="animate-spin" />
-                        Loading scan result...
+            <section className="overflow-hidden rounded-2xl border border-sky-100 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md animate-card-in">
+                <button type="button" onClick={() => setTechnicalOpen((value) => !value)} className="flex w-full items-center gap-3 bg-gradient-to-r from-sky-50/80 via-white to-indigo-50/50 p-5 text-left transition-colors hover:from-sky-50 sm:p-6">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-indigo-700 shadow-sm ring-1 ring-indigo-100"><ShieldCheck size={20} /></span>
+                    <span className="min-w-0 flex-1"><span className="block font-semibold text-slate-900">Technical assessment</span><span className="mt-1 block text-sm text-slate-500">Review detected indicators, security checks and technical findings first</span></span>
+                    {technicalOpen ? <ChevronDown size={19} className="text-slate-400" /> : <ChevronRight size={19} className="text-slate-400" />}
+                </button>
+                {technicalOpen && (
+                    <div className="space-y-6 border-t border-slate-100 p-5 sm:p-6">
+                        {result ? (
+                            <>
+                                <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4">
+                                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                                        <div><h4 className="text-sm font-semibold text-slate-800">Finding severity distribution</h4><p className="mt-0.5 text-xs text-slate-500">Breakdown of technical findings by severity</p></div>
+                                        <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-sm">{summary.findings_count ?? 0} total</span>
+                                    </div>
+                                    <div className="mb-4 flex h-3 overflow-hidden rounded-full bg-slate-100" aria-label="Finding severity distribution">
+                                        {[{key:"CRITICAL",color:"bg-rose-500"},{key:"HIGH",color:"bg-orange-400"},{key:"MEDIUM",color:"bg-amber-400"},{key:"LOW",color:"bg-sky-400"},{key:"INFO",color:"bg-slate-400"}].map(({key,color}) => {
+                                            const total = Number(summary.findings_count || 0);
+                                            const count = Number(severityCounts[key] || 0);
+                                            return count > 0 && total > 0 ? <span key={key} className={`${color} animate-bar-grow`} style={{width:`${(count / total) * 100}%`,"--bar-width":`${(count / total) * 100}%`}} title={`${titleCase(key)}: ${count}`} /> : null;
+                                        })}
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+                                        {[{key:"CRITICAL",dot:"bg-rose-500",tone:"text-rose-700",surface:"bg-rose-50"},{key:"HIGH",dot:"bg-orange-400",tone:"text-orange-700",surface:"bg-orange-50"},{key:"MEDIUM",dot:"bg-amber-400",tone:"text-amber-700",surface:"bg-amber-50"},{key:"LOW",dot:"bg-sky-400",tone:"text-sky-700",surface:"bg-sky-50"},{key:"INFO",dot:"bg-slate-400",tone:"text-slate-600",surface:"bg-slate-50"}].map(({key,dot,tone,surface}) => <div key={key} className={`flex items-center justify-between rounded-xl ${surface} px-3 py-2`}><span className="flex items-center gap-2 text-xs text-slate-600"><span className={`h-2 w-2 rounded-full ${dot}`} />{titleCase(key)}</span><span className={`text-sm font-bold tabular-nums ${tone}`}>{severityCounts[key] ?? 0}</span></div>)}
+                                    </div>
+                                </div>
+                                {scanners.length > 0 ? <div className="space-y-2"><h4 className="text-sm font-semibold text-slate-800">Individual security checks</h4>{scanners.map((scanner, index) => <ScannerCard key={`${scanner.scanner || "scanner"}-${index}`} scanner={scanner} index={index} />)}</div> : <div className="rounded-xl border border-slate-200 bg-slate-50 p-4"><p className="text-sm font-semibold text-slate-700">No additional security checks were performed</p><p className="mt-1 text-sm leading-6 text-slate-500">{executionGate.reason ? titleCase(executionGate.reason) : "Additional checks may have been skipped based on the initial scan result."}</p></div>}
+                                {skippedScanners.length > 0 && <div><h4 className="text-sm font-semibold text-slate-800">Checks not performed</h4><div className="mt-2 flex flex-wrap gap-2">{skippedScanners.map((name) => <span key={name} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-600">{titleCase(name)}</span>)}</div></div>}
+                                <div className="grid gap-3 border-t border-slate-100 pt-4 sm:grid-cols-2"><div><p className="text-xs text-slate-400">Scan started</p><p className="mt-1 text-sm text-slate-600">{formatDate(result.started_at)}</p></div><div><p className="text-xs text-slate-400">Scan completed</p><p className="mt-1 text-sm text-slate-600">{formatDate(result.completed_at)}</p></div></div>
+                            </>
+                        ) : <p className="text-sm text-slate-500">Technical scan details are unavailable.</p>}
                     </div>
-                ) : result ? (
-                    <>
-                        <section className="mb-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                            <MetricCard
-                                label="Website"
-                                value={
-                                    <span className="break-all text-base">
-                                        {result.target_url || "Not available"}
-                                    </span>
-                                }
-                            />
-                            <MetricCard
-                                label="Pages / security checks"
-                                value={summary.scanners_run ?? 0}
-                                helper="Security checks completed"
-                            />
-                            <MetricCard
-                                label="Findings"
-                                value={summary.findings_count ?? 0}
-                                helper="Items that may need attention"
-                            />
-                            <MetricCard
-                                label="PII confidence"
-                                value={titleCase(scan.pii_confidence || "Unknown")}
-                                helper={
-                                    scan.manual_confirmation_required
-                                        ? "Manual confirmation is recommended"
-                                        : "No manual confirmation flagged"
-                                }
-                            />
-                        </section>
+                )}
+            </section>
 
-                        <section className={`mb-7 rounded-xl border p-5 ${piiSummary.className}`}>
-                            <div className="flex items-start gap-3">
-                                <PiiIcon size={21} className="mt-0.5 shrink-0" />
-                                <div>
-                                    <h2 className="font-semibold">
-                                        {piiSummary.title}
-                                    </h2>
-                                    <p className="mt-1 text-sm leading-6 opacity-90">
-                                        {piiSummary.description}
-                                    </p>
-                                    {indicators.length > 0 && (
-                                        <div className="mt-4 flex flex-wrap gap-2">
-                                            {indicators.map((indicator) => (
-                                                <span
-                                                    key={indicator}
-                                                    className="rounded-full border border-current/20 bg-white/70 px-3 py-1 text-xs"
-                                                >
-                                                    {titleCase(indicator)}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                        </section>
 
-                        <div className="space-y-4">
-                            <details
-                                open
-                                className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
-                            >
-                                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5">
-                                    <div>
-                                        <h2 className="font-semibold text-[#14213D]">
-                                            1. Checklist-Based Assessment
-                                        </h2>
-                                        <p className="mt-1 text-sm text-slate-500">
-                                            Compliance checklist results and recommendations.
-                                        </p>
-                                    </div>
-                                    <ChevronDown size={19} className="shrink-0 text-slate-500" />
-                                </summary>
+            <section className="space-y-3 animate-card-in">
+                <div className="flex flex-wrap items-end justify-between gap-2">
+                    <div>
+                        <h3 className="text-base font-semibold text-slate-900">Compliance snapshot</h3>
+                        <p className="mt-1 text-sm text-slate-500">A status-based view of the checklist evaluation.</p>
+                    </div>
+                    <span className="text-xs text-slate-400">{crawlerChecklistItems.length} checklist items assessed by crawler</span>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <SummaryCard label="Compliant" value={statusCounts.COMPLIANT} hint="Requirements met" icon={CheckCircle2} accent="emerald" active={filter === "COMPLIANT"} onClick={() => setFilter(filter === "COMPLIANT" ? "ALL" : "COMPLIANT")} />
+                    <SummaryCard label="Non-compliant" value={statusCounts.NON_COMPLIANT} hint="Action required" icon={XCircle} accent="red" active={filter === "NON_COMPLIANT"} onClick={() => setFilter(filter === "NON_COMPLIANT" ? "ALL" : "NON_COMPLIANT")} />
+                    <SummaryCard label="Partially compliant" value={statusCounts.PARTIALLY_COMPLIANT} hint="Improvement needed" icon={AlertTriangle} accent="amber" active={filter === "PARTIALLY_COMPLIANT"} onClick={() => setFilter(filter === "PARTIALLY_COMPLIANT" ? "ALL" : "PARTIALLY_COMPLIANT")} />
+                    <SummaryCard label="Requires review" value={statusCounts.REVIEW} hint="Manual verification" icon={Info} accent="blue" active={filter === "REVIEW"} onClick={() => setFilter(filter === "REVIEW" ? "ALL" : "REVIEW")} />
+                </div>
+            </section>
 
-                                <div className="border-t border-slate-200 p-5">
-                                    {checklistLoading ? (
-                                        <div className="flex items-center gap-3 py-8 text-sm text-slate-500">
-                                            <RefreshCw size={17} className="animate-spin" />
-                                            Loading checklist assessment...
-                                        </div>
-                                    ) : checklistError ? (
-                                        <div
-                                            role="alert"
-                                            className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700"
-                                        >
-                                            {checklistError}
-                                        </div>
-                                    ) : checklistReport ? (
-                                        <div className="space-y-5">
-                                            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-                                                <ChecklistMetric label="Total" value={checklistSummary.total} />
-                                                <ChecklistMetric
-                                                    label="Compliant"
-                                                    value={checklistSummary.COMPLIANT}
-                                                    colorClass="text-emerald-700"
-                                                />
-                                                <ChecklistMetric
-                                                    label="Non-compliant"
-                                                    value={checklistSummary.NON_COMPLIANT}
-                                                    colorClass="text-red-700"
-                                                />
-                                                <ChecklistMetric
-                                                    label="Partially compliant"
-                                                    value={checklistSummary.PARTIALLY_COMPLIANT}
-                                                    colorClass="text-amber-700"
-                                                />
-                                                <ChecklistMetric
-                                                    label="Review"
-                                                    value={checklistSummary.REVIEW}
-                                                    colorClass="text-blue-700"
-                                                />
-                                            </div>
-
-                                            {(checklistSummary.NOT_APPLICABLE ?? 0) > 0 && (
-                                                <p className="text-xs text-slate-500">
-                                                    Not applicable: {checklistSummary.NOT_APPLICABLE}
-                                                </p>
-                                            )}
-
-                                            {evaluatedChecklistItems.length > 0 ? (
-                                                <div className="space-y-3">
-                                                    {evaluatedChecklistItems.map((item, index) => {
-                                                        const checklist = item?.checklist || item || {};
-                                                        const status = String(checklist.status || "NOT_EVALUATED").toUpperCase();
-
-                                                        return (
-                                                            <article
-                                                                key={checklist.id ?? checklist.code ?? index}
-                                                                className="rounded-lg border border-slate-200 bg-white p-4"
-                                                            >
-                                                                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                                                                    <div>
-                                                                        <p className="text-sm font-semibold text-[#14213D]">
-                                                                            {checklist.code || `Checklist ${index + 1}`}
-                                                                        </p>
-                                                                        <p className="mt-1 text-sm leading-6 text-slate-500">
-                                                                            {checklist.description || "No description available."}
-                                                                        </p>
-                                                                    </div>
-                                                                    <span
-                                                                        className={`inline-flex w-fit shrink-0 rounded-full border px-2.5 py-1 text-xs font-medium ${checklistStatusStyle(status)}`}
-                                                                    >
-                                                                        {titleCase(status)}
-                                                                    </span>
-                                                                </div>
-
-                                                                {checklist.comment && (
-                                                                    <div className="mt-3 rounded-md bg-[#F4F7FB] p-3">
-                                                                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                                                                            Assessment comment
-                                                                        </p>
-                                                                        <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-500">
-                                                                            {checklist.comment}
-                                                                        </p>
-                                                                    </div>
-                                                                )}
-
-                                                                <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500">
-                                                                    {checklist.clause && <span>Clause: {checklist.clause}</span>}
-                                                                    {checklist.version && <span>Version: {checklist.version}</span>}
-                                                                </div>
-                                                            </article>
-                                                        );
-                                                    })}
-                                                </div>
-                                            ) : (
-                                                <p className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-No evaluated checklist questions are available for this audit.
-                                                </p>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <p className="text-sm text-slate-500">
-                                            Checklist assessment is not available.
-                                        </p>
-                                    )}
-                                </div>
-                            </details>
-
-                            <details
-                                open
-                                className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
-                            >
-                                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5">
-                                    <div>
-                                        <h2 className="font-semibold text-[#14213D]">
-                                            2. Technical Scan Results
-                                        </h2>
-                                        <p className="mt-1 text-sm text-slate-500">
-                                            Website security checks and technical findings.
-                                        </p>
-                                    </div>
-                                    <ChevronDown size={19} className="shrink-0 text-slate-500" />
-                                </summary>
-
-                                <div className="space-y-6 border-t border-slate-200 p-5">
-                                    <div>
-                                        <h3 className="mb-3 font-semibold text-slate-700">
-                                            Scan overview
-                                        </h3>
-                                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                                            <MetricCard
-                                                label="Security checks run"
-                                                value={summary.scanners_run ?? 0}
-                                            />
-                                            <MetricCard
-                                                label="Total findings"
-                                                value={summary.findings_count ?? 0}
-                                            />
-                                            <MetricCard
-                                                label="Security checks executed"
-                                                value={executionGate.security_scans_run ? "Yes" : "No"}
-                                            />
-                                            <MetricCard
-                                                label="Execution decision"
-                                                value={titleCase(executionGate.decision || "Unknown")}
-                                                helper={titleCase(executionGate.reason || "")}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {!executionGate.security_scans_run && (
-                                        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-                                            <p className="font-medium text-amber-800">
-                                                Security checks were not run
-                                            </p>
-                                            <p className="mt-1 text-sm leading-6 text-amber-800">
-                                                The initial scan did not detect personal information
-                                                patterns, so the additional website security checks
-                                                were skipped according to the scan settings.
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    <div>
-                                        <h3 className="mb-3 font-semibold text-slate-700">
-                                            Findings by severity
-                                        </h3>
-                                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-                                            {["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"].map((level) => (
-                                                <div
-                                                    key={level}
-                                                    className="rounded-lg border border-slate-200 bg-white p-3"
-                                                >
-                                                    <p className="text-xs text-slate-500">
-                                                        {titleCase(level)}
-                                                    </p>
-                                                    <p className="mt-1 text-xl font-semibold text-slate-800">
-                                                        {severityCounts[level] ?? 0}
-                                                    </p>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {scanners.length > 0 ? (
-                                        <div>
-                                            <h3 className="mb-3 font-semibold text-slate-700">
-                                                Individual security checks
-                                            </h3>
-                                            <div className="space-y-3">
-                                                {scanners.map((scanner, index) => (
-                                                    <ScannerResult
-                                                        key={`${scanner.scanner || "scanner"}-${index}`}
-                                                        scanner={scanner}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-5">
-                                            <p className="font-medium text-slate-700">
-                                                No additional security checks were performed
-                                            </p>
-                                            <p className="mt-1 text-sm leading-6 text-slate-500">
-                                                The scanner did not identify personal information
-                                                patterns during its initial check. As a result, the
-                                                additional security checks were skipped.
-                                            </p>
-                                        </div>
-                                    )}
-
-                                    {skippedScanners.length > 0 && (
-                                        <div>
-                                            <h3 className="mb-2 font-semibold text-slate-700">
-                                                Checks not performed
-                                            </h3>
-                                            <div className="flex flex-wrap gap-2">
-                                                {skippedScanners.map((scanner) => (
-                                                    <span
-                                                        key={scanner}
-                                                        className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-500"
-                                                    >
-                                                        {titleCase(scanner)}
-                                                    </span>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    <div className="grid gap-3 border-t border-slate-200 pt-5 sm:grid-cols-2 lg:grid-cols-3">
-                                        <div>
-                                            <p className="text-xs text-slate-500">Scan started</p>
-                                            <p className="mt-1 text-sm text-slate-500">
-                                                {formatDate(result.started_at)}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-slate-500">Scan completed</p>
-                                            <p className="mt-1 text-sm text-slate-500">
-                                                {formatDate(result.completed_at)}
-                                            </p>
-                                        </div>
-                                        <div>
-                                            <p className="text-xs text-slate-500">Execution mode</p>
-                                            <p className="mt-1 text-sm text-slate-500">
-                                                {titleCase(result.execution_mode || "Not available")}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </details>
+            <section className="overflow-hidden rounded-2xl border border-violet-100 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md animate-card-in">
+                <div className="flex flex-col gap-3 border-b border-violet-100 bg-gradient-to-r from-violet-50/70 via-white to-sky-50/60 p-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <div className="flex items-center gap-2"><FileCheck2 size={18} className="text-blue-700" /><h3 className="font-semibold text-slate-900">Checklist assessment</h3></div>
+                        <p className="mt-1 text-sm text-slate-500">Showing only checklist items assessed by the crawler. Select an item to inspect its observation.</p>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-slate-500"><span className="rounded-md bg-slate-100 px-2.5 py-1.5 font-semibold">{filteredItems.length} of {crawlerChecklistItems.length} shown</span><button type="button" onClick={() => setFilter("ALL")} className="font-semibold text-blue-700 hover:text-blue-900">Clear filter</button></div>
+                </div>
+                <div className="space-y-2 bg-gradient-to-b from-slate-50/60 to-white p-4 sm:p-5">
+                    {checklistLoading ? (
+                        <div className="flex items-center gap-2 py-8 text-sm text-slate-500"><RefreshCw size={16} className="animate-spin" />Loading checklist items…</div>
+                    ) : filteredItems.length ? filteredItems.map((item, index) => {
+                        const key = item.id ?? item.code ?? index;
+                        return <ChecklistItem key={key} item={item} expanded={!!expandedItems[key]} onToggle={() => toggleItem(key)} />;
+                    }) : (
+                        <div className="rounded-xl border border-dashed border-slate-300 px-4 py-10 text-center">
+                            <Info size={22} className="mx-auto text-slate-400" />
+                            <p className="mt-2 text-sm font-medium text-slate-700">No crawler-assessed checklist items in this category</p>
+                            <p className="mt-1 text-xs text-slate-500">Choose another status or clear the filter.</p>
                         </div>
+                    )}
+                </div>
+            </section>
 
-                        {result.error_message && (
-                            <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                                {result.error_message}
-                            </div>
-                        )}
-
-                        <div className="mt-7 flex items-center gap-2 text-xs text-slate-500">
-                            <Globe size={14} />
-                            <span>Result for {result.target_url || "the submitted website"}</span>
-                            <span className="mx-1">·</span>
-                            <Clock3 size={14} />
-                            <span>Completed {formatDate(result.completed_at)}</span>
-                        </div>
-                    </>
-                ) : null}
+            <div className="flex items-start gap-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs leading-5 text-slate-500">
+                <Info size={15} className="mt-0.5 shrink-0" />
+                Automated scan results are indicative technical observations. Items marked “Requires review” or “Not evaluated” need further verification and should not be treated as confirmed compliance outcomes.
             </div>
         </div>
     );

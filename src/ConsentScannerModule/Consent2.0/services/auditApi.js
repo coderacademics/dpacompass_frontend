@@ -33,13 +33,45 @@ export const startAudit = async ({
     audit_id,
     url,
     max_pages = 20,
+    crawl_mode = "full",
+    dpacompass_username,
+    authentication_required = false,
     username = "",
     password = "",
 }) => {
     if (!url?.trim()) {
         throw new Error("Audit URL is required.");
     }
-    // console.log(url,username, password);
+
+    if (!dpacompass_username?.trim()) {
+        throw new Error("DPACOMPASS username is required.");
+    }
+
+    const payload = {
+        url: url.trim(),
+        crawl_mode,
+        dpacompass_username: dpacompass_username.trim(),
+
+        ...(public_audit_id && {
+            public_audit_id: public_audit_id.trim(),
+        }),
+
+        ...(authentication_required && {
+            authentication_required: true,
+        }),
+
+        ...(username?.trim() && {
+            username: username.trim(),
+        }),
+
+        ...(password && {
+            password,
+        }),
+
+
+    };
+
+    console.log("Consent Scanner Payload:", payload);
 
     const response = await fetch(
         `${CONSENT_API_BASE_URL}/api/audits/test-crawl/`,
@@ -48,14 +80,7 @@ export const startAudit = async ({
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-                audit_id,
-                public_audit_id,
-                url: url.trim(),
-                max_pages: Number(max_pages),
-                username,
-                password,
-            }),
+            body: JSON.stringify(payload),
         }
     );
 
@@ -91,24 +116,23 @@ export const startAudit = async ({
     };
 };
 
-
 /**
  * Get the current status/result of an audit.
  *
  * Backend:
  * GET /api/audits/{auditId}/
  */
-export const getAuditStatus = async (auditId) => {
-    if (!auditId) {
-        throw new Error("Audit ID is required.");
+export const getAuditStatus = async (publicAuditId) => {
+    if (!publicAuditId) {
+        throw new Error("Public Audit ID is required.");
     }
 
     const response = await fetch(
-        `${CONSENT_API_BASE_URL}/api/audits/${auditId}/status/`,
+        `${CONSENT_API_BASE_URL}/api/audits/${encodeURIComponent(publicAuditId)}/status/`,
         {
             method: "GET",
             headers: {
-                "Accept": "application/json",
+                Accept: "application/json",
             },
         }
     );
@@ -125,9 +149,7 @@ export const getAuditStatus = async (auditId) => {
     const data = await response.json();
 
     if (!data?.success) {
-        throw new Error(
-            data?.message || "Failed to fetch audit status."
-        );
+        throw new Error(data?.message || "Failed to fetch audit status.");
     }
 
     return data;

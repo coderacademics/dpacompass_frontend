@@ -2,7 +2,7 @@ import { CONSENT_API_BASE_URL } from "../../../config";
 
 const API_BASE = CONSENT_API_BASE_URL.replace(/\/$/, "");
 
-// Headers without authentication
+// Common headers
 const getHeaders = () => ({
     Accept: "application/json",
     "Content-Type": "application/json",
@@ -24,9 +24,20 @@ const parseResponse = async (response) => {
     return data;
 };
 
+// Validate and encode Public Audit ID
+const requireAuditId = (publicAuditId) => {
+    const auditId = String(publicAuditId || "").trim();
+
+    if (!auditId) {
+        throw new Error("Public Audit ID is required.");
+    }
+
+    return encodeURIComponent(auditId);
+};
+
 // Common audit endpoint
 const auditUrl = (publicAuditId) =>
-    `${API_BASE}/api/audits/${encodeURIComponent(publicAuditId)}`;
+    `${API_BASE}/api/audits/${requireAuditId(publicAuditId)}`;
 
 
 /*
@@ -37,14 +48,23 @@ const auditUrl = (publicAuditId) =>
 
 export async function startSelfCheckConsentScan({
     url,
-    max_pages,
+    public_audit_id,
     username = "",
     password = "",
     authentication_required = false,
     dpacompass_username,
+    max_pages = 20,
 }) {
     if (!url?.trim()) {
         throw new Error("Website URL is required.");
+    }
+
+    if (!public_audit_id?.trim()) {
+        throw new Error("Public Audit ID is missing.");
+    }
+
+    if (!dpacompass_username?.trim()) {
+        throw new Error("DPACOMPASS username is missing.");
     }
 
     const parsedMaxPages = Number(max_pages);
@@ -53,33 +73,33 @@ export async function startSelfCheckConsentScan({
         throw new Error("Maximum pages must be a valid positive integer.");
     }
 
-    if (!dpacompass_username) {
-        throw new Error("DPACOMPASS username is missing.");
-    }
-
     const payload = {
         url: url.trim(),
+        crawl_mode: "full",
+        dpacompass_username: dpacompass_username.trim(),
+        public_audit_id: public_audit_id.trim(),
         max_pages: parsedMaxPages,
-        dpacompass_username,
+
         ...(authentication_required && {
             authentication_required: true,
         }),
+
         ...(username?.trim() && {
             username: username.trim(),
         }),
+
         ...(password && {
             password,
         }),
     };
 
-    const response = await fetch(
-        `${API_BASE}/api/audits/test-crawl/`,
-        {
-            method: "POST",
-            headers: getHeaders(),
-            body: JSON.stringify(payload),
-        }
-    );
+    console.log("[Consent Scanner] Final API Payload:", payload);
+
+    const response = await fetch(`${API_BASE}/api/audits/test-crawl/`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(payload),
+    });
 
     return parseResponse(response);
 }
@@ -91,29 +111,51 @@ export async function startSelfCheckConsentScan({
 |--------------------------------------------------------------------------
 */
 
-export async function getDpacompassAudits() {
-    let user;
+export const getDpacompassAudits = async () => {
+    let user = {};
 
     try {
         user = JSON.parse(localStorage.getItem("user") || "{}");
     } catch {
-        throw new Error("Unable to retrieve logged-in user information.");
+        throw new Error("Unable to read the logged-in DPACOMPASS user.");
     }
 
-    const dpacompassUsername = user?.username;
+    const dpacompassUsername =
+        user.username || user.dpacompass_username || "";
 
     if (!dpacompassUsername) {
-        throw new Error("DPACOMPASS username is missing.");
+        throw new Error("DPACOMPASS username not found.");
     }
 
+    const response = await fetch(`${API_BASE}/api/audits/dpacompass-audits/`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify({
+            dpacompass_username: dpacompassUsername,
+        }),
+    });
+
+    return parseResponse(response);
+};
+
+
+/*
+|--------------------------------------------------------------------------
+| 3. Get Consent Audit Summary
+|--------------------------------------------------------------------------
+| Loads audit metadata and step-wise execution/status information.
+|
+| GET /api/audits/consent/result/{audit_id}/
+*/
+
+export async function getConsentAuditSummary(publicAuditId) {
+    const auditId = requireAuditId(publicAuditId);
+
     const response = await fetch(
-        `${API_BASE}/api/audits/dpacompass-audits/`,
+        `${API_BASE}/api/audits/consent/result/${auditId}/`,
         {
-            method: "POST",
+            method: "GET",
             headers: getHeaders(),
-            body: JSON.stringify({
-                dpacompass_username: dpacompassUsername,
-            }),
         }
     );
 
@@ -123,8 +165,86 @@ export async function getDpacompassAudits() {
 
 /*
 |--------------------------------------------------------------------------
-| 3. Get Complete Technical Scan Result
+| 4. Get Individual Consent Step Result
 |--------------------------------------------------------------------------
+| Called only when the user opens a step.
+|
+| GET /api/audits/consent/result/{audit_id}/step/{step_number}/
+|
+| IMPORTANT:
+| Pass the actual backend step number, not the UI serial number.
+| Example: STEP-04 must pass 4.
+*/
+
+export async function getConsentStepResult(publicAuditId, stepNumber) {
+    const auditId = requireAuditId(publicAuditId);
+    const parsedStepNumber = Number(stepNumber);
+
+    if (!Number.isInteger(parsedStepNumber) || parsedStepNumber < 1) {
+        throw new Error("A valid Consent Scanner step number is required.");
+    }
+
+    const response = await fetch(
+        `${API_BASE}/api/audits/consent/result/${auditId}/step/${parsedStepNumber}/`,
+        {
+            method: "GET",
+            headers: getHeaders(),
+        }
+    );
+
+    return parseResponse(response);
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| 5. Get STEP-01 Findings (Backend Pagination)
+|--------------------------------------------------------------------------
+|
+| GET /api/audits/consent/result/{audit_id}/step/1/findings/
+|     ?page=1&page_size=20
+*/
+
+export async function getConsentStepFindings(
+    publicAuditId,
+    { page = 1, pageSize = 20 } = {}
+) {
+    const auditId = requireAuditId(publicAuditId);
+
+    const parsedPage = Number(page);
+    const parsedPageSize = Number(pageSize);
+
+    if (!Number.isInteger(parsedPage) || parsedPage < 1) {
+        throw new Error("Page must be a positive integer.");
+    }
+
+    if (!Number.isInteger(parsedPageSize) || parsedPageSize < 1) {
+        throw new Error("Page size must be a positive integer.");
+    }
+
+    const query = new URLSearchParams({
+        page: String(parsedPage),
+        page_size: String(parsedPageSize),
+    });
+
+    const response = await fetch(
+        `${API_BASE}/api/audits/consent/result/${auditId}/step/1/findings/?${query.toString()}`,
+        {
+            method: "GET",
+            headers: getHeaders(),
+        }
+    );
+
+    return parseResponse(response);
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| 6. Legacy: Get Complete Technical Scan Result
+|--------------------------------------------------------------------------
+| Retained temporarily for backward compatibility with older components.
+| The new result viewer should use the three functions above.
 */
 
 export async function getCompleteConsentScanResult(publicAuditId) {
@@ -146,17 +266,13 @@ export async function getCompleteConsentScanResult(publicAuditId) {
 
 /*
 |--------------------------------------------------------------------------
-| 4. Get Checklist Assessment
+| 7. Get Checklist Assessment
 |--------------------------------------------------------------------------
 */
 
 export async function getConsentChecklistAssessment(publicAuditId) {
-    if (!publicAuditId) {
-        throw new Error("Audit ID is required.");
-    }
-
     const response = await fetch(
-        `${API_BASE}/api/checklist_assessment/audits/${encodeURIComponent(publicAuditId)}/`,
+        `${API_BASE}/api/checklist_assessment/audits/${requireAuditId(publicAuditId)}/`,
         {
             method: "GET",
             headers: getHeaders(),
@@ -169,15 +285,11 @@ export async function getConsentChecklistAssessment(publicAuditId) {
 
 /*
 |--------------------------------------------------------------------------
-| 5. Get Scan Status
+| 8. Get Scan Status
 |--------------------------------------------------------------------------
 */
 
 export async function getConsentScanStatus(publicAuditId) {
-    if (!publicAuditId) {
-        throw new Error("Audit ID is required.");
-    }
-
     const response = await fetch(
         `${auditUrl(publicAuditId)}/status/`,
         {
@@ -190,14 +302,17 @@ export async function getConsentScanStatus(publicAuditId) {
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| 9. Get Self-Check Consent HTML Report
+|--------------------------------------------------------------------------
+*/
 
 export const getSelfCheckConsentReport = async (publicAuditId) => {
-    if (!publicAuditId) {
-        throw new Error("Public Audit ID is required.");
-    }
+    const auditId = requireAuditId(publicAuditId);
 
     const response = await fetch(
-        `${API_BASE}/api/reports/audit/${encodeURIComponent(publicAuditId)}/html/`,
+        `${API_BASE}/api/reports/audit/${auditId}/html/`,
         {
             method: "GET",
             headers: {

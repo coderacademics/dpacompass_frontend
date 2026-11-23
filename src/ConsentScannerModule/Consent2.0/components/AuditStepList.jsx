@@ -11,7 +11,7 @@ const normalizeComplianceStatus = (status) =>
     String(status || "").trim().toUpperCase();
 
 const getStepNumber = (stepId, index) => {
-    const match = String(stepId || "").match(/STEP-(\\d+)/i);
+    const match = String(stepId || "").match(/STEP-(\d+)/i);
     return match ? match[1] : String(index + 1).padStart(2, "0");
 };
 
@@ -47,12 +47,12 @@ const AuditStepList = ({ steps = [] }) => {
 
     if (!Array.isArray(steps) || steps.length === 0) {
         return (
-            <div className="rounded-xl border border-slate-800 bg-slate-900/40 px-6 py-10 text-center">
-                <p className="text-sm font-medium text-slate-400">
+            <div className="rounded-xl border border-slate-200 bg-white px-6 py-10 text-center shadow-sm">
+                <p className="text-sm font-medium text-slate-700">
                     No audit steps available
                 </p>
 
-                <p className="mt-1 text-xs text-slate-600">
+                <p className="mt-1 text-xs text-slate-500">
                     No completed audit step results were returned.
                 </p>
             </div>
@@ -73,7 +73,7 @@ const AuditStepList = ({ steps = [] }) => {
                  * At this point the parent has already normalized the API
                  * response:
                  *
-                 * step.status          -> compliance result (PASS/FAIL/REVIEW)
+                 * step.status           -> compliance result (PASS/FAIL/REVIEW)
                  * step.execution_status -> crawler execution status
                  *
                  * Therefore StatusBadge must receive step.status here.
@@ -84,7 +84,7 @@ const AuditStepList = ({ steps = [] }) => {
                 return (
                     <div
                         key={stepId}
-                        className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50"
+                        className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md"
                     >
                         {/* STEP HEADER */}
                         <button
@@ -100,12 +100,12 @@ const AuditStepList = ({ steps = [] }) => {
                                 px-5
                                 py-5
                                 text-left
-                                transition
-                                hover:bg-slate-800/30
+                                transition-colors
+                                hover:bg-slate-50
                                 focus:outline-none
-                                focus:ring-1
+                                focus:ring-2
                                 focus:ring-inset
-                                focus:ring-indigo-500/40
+                                focus:ring-[#075EB5]/30
                             "
                         >
                             {/* Step Number */}
@@ -119,11 +119,11 @@ const AuditStepList = ({ steps = [] }) => {
                                     justify-center
                                     rounded-lg
                                     border
-                                    border-indigo-500/20
-                                    bg-indigo-500/10
+                                    border-blue-100
+                                    bg-blue-50
                                     text-xs
                                     font-semibold
-                                    text-indigo-300
+                                    text-[#075EB5]
                                 "
                             >
                                 {stepNumber}
@@ -131,11 +131,11 @@ const AuditStepList = ({ steps = [] }) => {
 
                             {/* Title */}
                             <div className="min-w-0 flex-1">
-                                <p className="text-[10px] font-medium uppercase tracking-wider text-slate-600">
+                                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">
                                     {stepId}
                                 </p>
 
-                                <h3 className="mt-1 text-sm font-semibold text-slate-100">
+                                <h3 className="mt-1 text-sm font-semibold text-[#14213D]">
                                     {title}
                                 </h3>
                             </div>
@@ -151,7 +151,7 @@ const AuditStepList = ({ steps = [] }) => {
                                     h-4
                                     w-4
                                     shrink-0
-                                    text-slate-600
+                                    text-slate-500
                                     transition-transform
                                     duration-200
                                     ${isOpen ? "rotate-180" : ""}
@@ -163,7 +163,7 @@ const AuditStepList = ({ steps = [] }) => {
                         {isOpen && (
                             <div
                                 id={`${stepId}-details`}
-                                className="border-t border-slate-800 p-5"
+                                className="border-t border-slate-200 bg-slate-50/60 p-5"
                             >
                                 <AuditStepDetails step={step} />
                             </div>

@@ -104,13 +104,53 @@ export default function AuditorChecklistPage() {
     // FETCH AUDIT DETAILS
     // ==========================================
 
+
     const fetchAuditDetails = useCallback(async () => {
-
         try {
-
             setLoading(true);
             setError("");
 
+            // ==========================================
+            // STEP 1: FETCH APPLICATION DETAILS
+            // ==========================================
+            try {
+                const applicationResponse = await fetchWithAuth(
+                    `/api/applications/${encodeURIComponent(publicAuditId)}/`,
+                    {
+                        method: "GET",
+                        headers: {
+                            Accept: "application/json",
+                        },
+                    }
+                );
+
+                if (!applicationResponse.ok) {
+                    throw new Error(
+                        `Application API failed. HTTP ${applicationResponse.status}`
+                    );
+                }
+
+                const applicationData = await applicationResponse.json();
+
+                // Display complete response in browser console
+                console.log("APPLICATION DETAILS RESPONSE:", applicationData);
+
+                // Display application URL separately
+                console.log(
+                    "APPLICATION URL:",
+                    applicationData?.application_url
+                );
+
+            } catch (applicationError) {
+                console.error(
+                    "Application details fetch error:",
+                    applicationError
+                );
+            }
+
+            // ==========================================
+            // STEP 2: FETCH AUDITOR CHECKLIST
+            // ==========================================
             const data = await getAuditorChecklist(publicAuditId);
 
             if (!data || !Array.isArray(data.domains)) {
@@ -122,13 +162,9 @@ export default function AuditorChecklistPage() {
             const normalized = normalizeDomains(data);
 
             setAudit(data);
-
             setDomains(normalized.domains);
-
-            // Initialize editable state
             setResponses(normalized.responses);
 
-            // Initialize saved state
             setSavedResponses(
                 Object.fromEntries(
                     Object.entries(normalized.responses).map(
@@ -141,7 +177,6 @@ export default function AuditorChecklistPage() {
             );
 
         } catch (err) {
-
             console.error("Audit fetch error:", err);
 
             setError(
@@ -149,11 +184,8 @@ export default function AuditorChecklistPage() {
             );
 
         } finally {
-
             setLoading(false);
-
         }
-
     }, [publicAuditId]);
 
 
@@ -812,6 +844,8 @@ export default function AuditorChecklistPage() {
                                 onClear={handleClearRow}
                                 isDirty={isResponseDirty}
                                 savingId={savingId}
+                                audit={audit}
+                                publicAuditId={audit?.public_audit_id || publicAuditId}
                                 defaultOpen={index === 0}
                             />
                         ))

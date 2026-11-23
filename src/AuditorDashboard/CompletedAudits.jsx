@@ -917,7 +917,7 @@ export default function CompletedAudits({ onBack }) {
                             <table className="ca-table">
                                 <thead><tr>
                                     <th scope="col">Application</th>
-                                    <th scope="col">Auditor</th>
+                                    {/* <th scope="col">Auditor</th> */}
                                     <th scope="col">Status</th>
                                     <th scope="col">Generated on</th>
                                     <th scope="col">Published on</th>
@@ -944,14 +944,14 @@ export default function CompletedAudits({ onBack }) {
                                                         </div>
                                                     </div>
                                                 </td>
-                                                <td>{audit.auditor_name || "Not provided"}</td>
+                                                {/* <td>{audit.auditor_name || "Not provided"}</td> */}
                                                 <td><ReportStatus published={audit.published_report} /></td>
                                                 <td><span className="ca-date"><FiCalendar aria-hidden="true" />{formatDateTime(audit.report_generated_at)}</span></td>
                                                 <td><span className="ca-date"><FiCalendar aria-hidden="true" />{audit.published_report ? formatDateTime(audit.report_published_at) : "—"}</span></td>
                                                 <td style={{ textAlign: "right" }}>
                                                     <button type="button" className="ca-view" disabled={busy} onClick={() => openReport(audit)}>
                                                         {busy ? <FiLoader className="ca-spin" /> : <FiEye aria-hidden="true" />}
-                                                        {busy ? "Loading..." : "View Details"}
+                                                        {busy ? "Loading..." : "View Report"}
                                                     </button>
                                                     {errors[audit.audit_id || key] && <span className="ca-action-error" role="alert">{errors[audit.audit_id || key]}</span>}
                                                 </td>

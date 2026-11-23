@@ -78,20 +78,20 @@ const formatStatus = (value) =>
 const StatusBadge = ({ status }) => {
     const normalized = normalizeStatus(status);
     const styles = {
-        COMPLETED: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-        SUCCESS: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-        RUNNING: "border-blue-500/30 bg-blue-500/10 text-blue-300",
-        QUEUED: "border-amber-500/30 bg-amber-500/10 text-amber-300",
-        FAILED: "border-red-500/30 bg-red-500/10 text-red-300",
-        ERROR: "border-red-500/30 bg-red-500/10 text-red-300",
-        NOT_EVALUATED: "border-slate-600 bg-slate-800 text-slate-300",
-        PARTIALLY_COMPLIANT: "border-amber-500/30 bg-amber-500/10 text-amber-300",
-        NON_COMPLIANT: "border-red-500/30 bg-red-500/10 text-red-300",
-        COMPLIANT: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+        COMPLETED: "border-emerald-200 bg-emerald-50 text-emerald-700",
+        SUCCESS: "border-emerald-200 bg-emerald-50 text-emerald-700",
+        RUNNING: "border-blue-200 bg-blue-50 text-blue-700",
+        QUEUED: "border-amber-200 bg-amber-50 text-amber-700",
+        FAILED: "border-red-200 bg-red-50 text-red-700",
+        ERROR: "border-red-200 bg-red-50 text-red-700",
+        NOT_EVALUATED: "border-slate-200 bg-slate-100 text-slate-600",
+        PARTIALLY_COMPLIANT: "border-amber-200 bg-amber-50 text-amber-700",
+        NON_COMPLIANT: "border-red-200 bg-red-50 text-red-700",
+        COMPLIANT: "border-emerald-200 bg-emerald-50 text-emerald-700",
     };
 
     return (
-        <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${styles[normalized] || "border-slate-700 bg-slate-800 text-slate-300"}`}>
+        <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${styles[normalized] || "border-slate-300 bg-slate-100 text-slate-700"}`}>
             {formatStatus(status)}
         </span>
     );
@@ -100,17 +100,17 @@ const StatusBadge = ({ status }) => {
 const PageHeader = ({ title, description }) => (
     <div className="mb-8">
         <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-indigo-500/20 bg-indigo-500/10">
-                <ShieldCheck className="h-5 w-5 text-indigo-400" />
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-blue-100 bg-blue-50">
+                <ShieldCheck className="h-5 w-5 text-[#075EB5]" />
             </div>
             <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-indigo-400">
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[#075EB5]">
                     Consent Audit
                 </p>
-                <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-100">
+                <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#14213D]">
                     {title}
                 </h1>
-                <p className="mt-1.5 text-sm leading-6 text-slate-400">
+                <p className="mt-1.5 text-sm leading-6 text-slate-500">
                     {description}
                 </p>
             </div>
@@ -120,35 +120,35 @@ const PageHeader = ({ title, description }) => (
 
 const AuditMetadata = ({ configuration, metadata }) => (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <div className="rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-4">
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
                 Target Website
             </p>
-            <p className="mt-1.5 break-all text-sm font-medium text-slate-200">
+            <p className="mt-1.5 break-all text-sm font-medium text-slate-700">
                 {configuration?.url || metadata?.url || "—"}
             </p>
         </div>
-        <div className="rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-4">
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
                 Authentication
             </p>
-            <p className="mt-1.5 text-sm font-medium text-slate-200">
+            <p className="mt-1.5 text-sm font-medium text-slate-700">
                 {configuration?.username ? "Credentials available" : "Not configured"}
             </p>
         </div>
-        <div className="rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-4">
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
                 Maximum Pages
             </p>
-            <p className="mt-1.5 text-sm font-medium text-slate-200">
+            <p className="mt-1.5 text-sm font-medium text-slate-700">
                 {metadata?.max_pages ?? configuration?.max_pages ?? "—"}
             </p>
         </div>
-        <div className="rounded-xl border border-slate-800 bg-slate-900/70 px-4 py-4">
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-4">
             <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-slate-500">
                 Completed At
             </p>
-            <p className="mt-1.5 text-sm font-medium text-slate-200">
+            <p className="mt-1.5 text-sm font-medium text-slate-700">
                 {formatDate(metadata?.completed_at)}
             </p>
         </div>
@@ -167,49 +167,49 @@ const ChecklistAssessment = ({ data, loading, error, onRetry }) => {
     }, [results]);
 
     return (
-        <section className="mt-6 overflow-hidden rounded-xl border border-slate-800 bg-slate-900/70">
-            <div className="border-b border-slate-800 px-5 py-5">
-                <h2 className="text-xl font-semibold text-slate-100">
+        <section className="mt-6 overflow-hidden rounded-xl border border-slate-200 bg-white">
+            <div className="border-b border-slate-200 px-5 py-5">
+                <h2 className="text-xl font-semibold text-[#14213D]">
                     Checklist Assessment
                 </h2>
-                <p className="mt-1 text-sm text-slate-400">
+                <p className="mt-1 text-sm text-slate-500">
                     Assessment of the audit checklist based on the completed scan.
                 </p>
             </div>
 
             {loading ? (
-                <div className="flex items-center gap-3 p-6 text-sm text-slate-400">
+                <div className="flex items-center gap-3 p-6 text-sm text-slate-500">
                     <LoaderCircle className="h-5 w-5 animate-spin" />
                     Generating checklist assessment...
                 </div>
             ) : error ? (
                 <div className="flex flex-col items-start gap-3 p-6">
-                    <div className="flex items-start gap-2 text-sm text-red-300">
+                    <div className="flex items-start gap-2 text-sm text-red-700">
                         <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
                         <div>
                             <p className="font-medium">Checklist assessment could not be loaded.</p>
-                            <p className="mt-1 text-red-300/80">{error}</p>
+                            <p className="mt-1 text-red-600">{error}</p>
                         </div>
                     </div>
                     <button
                         type="button"
                         onClick={onRetry}
-                        className="rounded-lg border border-slate-700 bg-slate-800 px-4 py-2 text-sm text-slate-200 hover:bg-slate-700"
+                        className="rounded-lg border border-slate-300 bg-slate-100 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
                     >
                         Retry Assessment
                     </button>
                 </div>
             ) : !data ? (
-                <p className="p-6 text-sm text-slate-400">
+                <p className="p-6 text-sm text-slate-500">
                     Checklist assessment is not available.
                 </p>
             ) : (
                 <div className="p-5">
                     <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
                         <div>
-                            <p className="text-sm text-slate-300">
+                            <p className="text-sm text-slate-700">
                                 Total checklist items:{" "}
-                                <span className="font-semibold text-white">
+                                <span className="font-semibold text-slate-900">
                                     {data.total_checklists ?? results.length}
                                 </span>
                             </p>
@@ -221,7 +221,7 @@ const ChecklistAssessment = ({ data, loading, error, onRetry }) => {
                             {Object.entries(counts).map(([status, count]) => (
                                 <span
                                     key={status}
-                                    className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-xs text-slate-300"
+                                    className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700"
                                 >
                                     <StatusBadge status={status} />
                                     <span>{count}</span>
@@ -231,7 +231,7 @@ const ChecklistAssessment = ({ data, loading, error, onRetry }) => {
                     </div>
 
                     {results.length === 0 ? (
-                        <p className="rounded-lg border border-slate-800 p-5 text-sm text-slate-400">
+                        <p className="rounded-lg border border-slate-200 p-5 text-sm text-slate-500">
                             The assessment API returned no checklist items.
                         </p>
                     ) : (
@@ -239,14 +239,14 @@ const ChecklistAssessment = ({ data, loading, error, onRetry }) => {
                             {results.map((item, index) => (
                                 <article
                                     key={`${item.question || "checklist"}-${index}`}
-                                    className="rounded-lg border border-slate-800 bg-slate-950/50 p-4"
+                                    className="rounded-lg border border-slate-200 bg-slate-50 p-4"
                                 >
                                     <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
                                         <div className="flex min-w-0 gap-3">
-                                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-800 text-xs font-semibold text-slate-300">
+                                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-slate-100 text-xs font-semibold text-slate-700">
                                                 {index + 1}
                                             </span>
-                                            <p className="text-sm leading-6 text-slate-200">
+                                            <p className="text-sm leading-6 text-slate-700">
                                                 {item.question || "Checklist question"}
                                             </p>
                                         </div>
@@ -255,11 +255,11 @@ const ChecklistAssessment = ({ data, loading, error, onRetry }) => {
                                         </div>
                                     </div>
                                     {item.comment && (
-                                        <div className="ml-10 mt-3 rounded-md border border-slate-800 bg-slate-900/70 px-3 py-2">
+                                        <div className="ml-10 mt-3 rounded-md border border-slate-200 bg-white px-3 py-2">
                                             <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
                                                 Assessment Comment
                                             </p>
-                                            <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-300">
+                                            <p className="mt-1 whitespace-pre-wrap text-sm leading-6 text-slate-700">
                                                 {item.comment}
                                             </p>
                                         </div>
@@ -563,7 +563,7 @@ const ConsentAutoAudit = () => {
             : `${estimatedSeconds} seconds`;
 
     const renderShell = (children) => (
-        <div className="min-h-screen bg-[#0b1120] px-6 py-6 text-slate-100">
+        <div className="min-h-screen bg-[#F4F7FB] px-6 py-6 text-[#14213D]">
             <div className="mx-auto w-full max-w-6xl">{children}</div>
         </div>
     );
@@ -579,10 +579,10 @@ const ConsentAutoAudit = () => {
                             : "Initializing the consent scanner..."
                     }
                 />
-                <div className="flex items-center gap-4 rounded-xl border border-slate-800 bg-slate-900/70 p-8">
-                    <LoaderCircle className="h-8 w-8 animate-spin text-indigo-400" />
+                <div className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-8">
+                    <LoaderCircle className="h-8 w-8 animate-spin text-[#075EB5]" />
                     <div>
-                        <p className="text-sm font-semibold text-slate-200">
+                        <p className="text-sm font-semibold text-slate-700">
                             {auditState === "checking" ? "Checking Existing Audit" : "Starting Consent Audit"}
                         </p>
                         <p className="mt-1 text-xs text-slate-500">
@@ -602,19 +602,19 @@ const ConsentAutoAudit = () => {
                     description="Set the maximum number of pages the scanner should inspect before starting the audit."
                 />
 
-                <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-6">
+                <div className="rounded-xl border border-slate-200 bg-white p-6">
                     <div className="mb-6">
-                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
                             Target Website
                         </label>
-                        <div className="rounded-lg border border-slate-800 bg-slate-950/70 px-4 py-3 text-sm text-slate-300 break-all">
+                        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 break-all">
                             {configuration?.url || "Website URL unavailable"}
                         </div>
                     </div>
 
                     <div className="grid gap-6 md:grid-cols-2">
                         <div>
-                            <label htmlFor="max-pages" className="mb-2 block text-sm font-medium text-slate-200">
+                            <label htmlFor="max-pages" className="mb-2 block text-sm font-medium text-slate-700">
                                 Maximum Pages to Crawl
                             </label>
                             <input
@@ -628,33 +628,33 @@ const ConsentAutoAudit = () => {
                                     setMaxPages(event.target.value);
                                     setMaxPagesError("");
                                 }}
-                                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
+                                className="w-full rounded-lg border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none focus:border-[#075EB5] focus:ring-2 focus:ring-blue-100"
                             />
                             <p className="mt-2 text-xs text-slate-500">
                                 Enter a value between {MIN_MAX_PAGES} and {MAX_MAX_PAGES}.
                             </p>
                             {maxPagesError && (
-                                <p className="mt-2 text-xs text-red-400">{maxPagesError}</p>
+                                <p className="mt-2 text-xs text-red-600">{maxPagesError}</p>
                             )}
                         </div>
 
-                        <div className="rounded-lg border border-indigo-500/20 bg-indigo-500/5 p-4">
-                            <div className="flex items-center gap-2 text-indigo-300">
+                        <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+                            <div className="flex items-center gap-2 text-blue-700">
                                 <Clock3 className="h-4 w-4" />
                                 <p className="text-sm font-medium">Estimated Crawl Duration</p>
                             </div>
-                            <p className="mt-3 text-2xl font-semibold text-white">
+                            <p className="mt-3 text-2xl font-semibold text-slate-900">
                                 {estimatedDuration}
                             </p>
-                            <p className="mt-1 text-xs leading-5 text-slate-400">
+                            <p className="mt-1 text-xs leading-5 text-slate-500">
                                 Approximate estimate based on the selected page limit. Actual duration depends on website response times.
                             </p>
                         </div>
                     </div>
 
-                    <div className="mt-6 rounded-lg border border-slate-800 bg-slate-950/50 p-4">
-                        <p className="text-sm font-medium text-slate-200">Authentication</p>
-                        <p className="mt-1 text-xs leading-5 text-slate-400">
+                    <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                        <p className="text-sm font-medium text-slate-700">Authentication</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-500">
                             {configuration?.username
                                 ? "Auditee login credentials are available and will be passed automatically to the scanner."
                                 : "No Auditee login credentials were provided for this application. The scanner will run without authenticated access."}
@@ -662,14 +662,14 @@ const ConsentAutoAudit = () => {
                     </div>
 
                     {error && (
-                        <p className="mt-4 text-sm text-red-400">{error}</p>
+                        <p className="mt-4 text-sm text-red-600">{error}</p>
                     )}
 
                     <div className="mt-7 flex flex-wrap justify-end gap-3">
                         <button
                             type="button"
                             onClick={() => navigate(-1)}
-                            className="inline-flex items-center gap-2 rounded-lg border border-slate-700 px-4 py-2.5 text-sm text-slate-300 hover:bg-slate-800"
+                            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-100"
                         >
                             <ArrowLeft className="h-4 w-4" />
                             Back
@@ -677,7 +677,7 @@ const ConsentAutoAudit = () => {
                         <button
                             type="button"
                             onClick={handleStartAudit}
-                            className="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-500"
+                            className="inline-flex items-center gap-2 rounded-lg bg-[#075EB5] px-5 py-2.5 text-sm font-medium text-slate-900 hover:bg-[#064D94]"
                         >
                             <ShieldCheck className="h-4 w-4" />
                             Start Consent Scan
@@ -715,18 +715,18 @@ const ConsentAutoAudit = () => {
                     title="Consent Audit"
                     description="Unable to complete the consent audit."
                 />
-                <div className="rounded-xl border border-red-500/20 bg-red-500/5 px-5 py-5">
+                <div className="rounded-xl border border-red-200 bg-red-50 px-5 py-5">
                     <div className="flex items-start gap-3">
-                        <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-400" />
+                        <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
                         <div>
-                            <p className="text-sm font-semibold text-red-300">Audit Failed</p>
-                            <p className="mt-1 text-sm text-red-300/80">{error}</p>
+                            <p className="text-sm font-semibold text-red-700">Audit Failed</p>
+                            <p className="mt-1 text-sm text-red-600">{error}</p>
                         </div>
                     </div>
                     <button
                         type="button"
                         onClick={() => navigate(-1)}
-                        className="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-300 hover:bg-slate-800"
+                        className="mt-5 inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-slate-50 px-4 py-2 text-sm text-slate-700 hover:bg-slate-100"
                     >
                         <ArrowLeft className="h-4 w-4" />
                         Back to Applications
@@ -746,19 +746,19 @@ const ConsentAutoAudit = () => {
                 <button
                     type="button"
                     onClick={() => navigate(-1)}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-700 bg-slate-900/80 px-3 py-2 text-sm text-slate-300 hover:bg-slate-800"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-100"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     Back to Applications
                 </button>
             </div>
 
-            <div className="mb-6 rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-5 py-4">
+            <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-5 py-4">
                 <div className="flex items-center gap-3">
-                    <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                     <div>
-                        <h2 className="text-sm font-semibold text-emerald-300">Audit Completed</h2>
-                        <p className="mt-0.5 text-xs text-slate-400">
+                        <h2 className="text-sm font-semibold text-emerald-700">Audit Completed</h2>
+                        <p className="mt-0.5 text-xs text-slate-500">
                             All scanner steps have completed. The checklist assessment is requested separately.
                         </p>
                     </div>

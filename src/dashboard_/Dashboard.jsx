@@ -14,6 +14,7 @@ import WidgetRenderer from "./WidgetRenderer";
 import LoadingDashboard from "./components/LoadingDashboard";
 import EmptyDashboard from "./components/EmptyDashboard";
 import useDashboard from "./hooks/useDashboard";
+import SelfCheckWorkspace from "../AuditeeDashboard/SelfCheckWorkSpace";
 
 /*
  * Dashboard-specific CSS lives in this file.
@@ -444,7 +445,21 @@ function SectionHeading({ id, eyebrow, title, subtitle, icon: Icon, tone = "blue
     );
 }
 
-export default function Dashboard() {
+export default function Dashboard({ auditMode }) {
+
+    const normalizedAuditMode = String(auditMode || "")
+        .trim()
+        .toLowerCase()
+        .replace(/[\s-]+/g, "_");
+
+    if (normalizedAuditMode === "self_check") {
+        return <SelfCheckWorkspace />;
+    }
+
+    return <DashboardOverview />;
+}
+
+function DashboardOverview() {
     const user = getStoredUser();
     const roleMap = { 1: "admin", 2: "auditor", 3: "auditee" };
     const role = roleMap[Number(user.role)] ||

@@ -96,7 +96,7 @@ import LearnDPDP from './AuditeeDashboard/LearnDPDP';
 import CompletedAudits from './AuditorDashboard/CompletedAudits';
 import SelfCheckDataBreachScanner from './AuditeeDashboard/Tools/BreachScanner/SelfCheckDataBreachScanner';
 import ProfilePage from './Profile/ProfilePage';
-import SelfCheckScanResult from './AuditeeDashboard/Tools/ConsentScanner/SelfCheckScanResult';
+import SelfCheckConsentScanResult from './AuditeeDashboard/Tools/ConsentScanner/SelfCheckConsentScanResult';
 import InProgressAudits from './AuditorDashboard/InProgressAudits';
 import DataBreachScanConfig from './AuditorDashboard/DataBreachScanConfig';
 import SelfCheckDataBreachScans from './AuditeeDashboard/Tools/BreachScanner/SelfCheckDataBreachScans';
@@ -112,6 +112,14 @@ import AuditeePublishedReports from './AuditeeDashboard/AuditeePublishedReport';
 //  ------------------------------------------ NEW UI -------------------------------------
 import NewUIRoot from './new_ui/app/NewUIRoot';
 import DashboardLayout from "./dashboard_/DashboardLayout";
+import SelfCheckScansPage from './AuditeeDashboard/SelfCheckScansPage';
+
+
+// ----------------------------------------- TEST ---------------------------------------- 
+import ConsentScanStepResults from './AuditeeDashboard/StaticPage/ConsentScanStepResults';
+import ConsolidatedSelfCheckReport from './AuditeeDashboard/ConsolidatedSelfCheckReport';
+
+
 
 
 
@@ -188,7 +196,9 @@ function App() {
               </PublicRoute>
             }
           />
-
+          <Route
+            path="/result"
+            element={<ConsentScanStepResults />} />
           <Route
             path="/signup"
             element={
@@ -449,15 +459,23 @@ function App() {
             }
           />
 
-          <Route
+          {/* <Route
             path="/user/self-check/scans/:publicAuditId/results"
             element={
               <ProtectedRoute allowedRoles={[3]}>
                 <SelfCheckScanResult />
               </ProtectedRoute>
             }
+          /> */}
+          <Route
+            path="/user/self-check/scans/:publicAuditId/consent-results"
+            element={<SelfCheckConsentScanResult />}
           />
 
+          <Route
+            path="/user/self-check/results/:publicAuditId"
+            element={<ConsolidatedSelfCheckReport />}
+          />
           <Route
             path="/user/self-check/scans/:publicAuditId/results"
             element={
@@ -548,6 +566,23 @@ function App() {
             }
           />
 
+          <Route
+            path="/user/self-check/results"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <SelfCheckScansPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/consent-scan-results"
+            element={
+              <ProtectedRoute allowedRoles={[3]}>
+                <ConsentScanStepResults />
+              </ProtectedRoute>
+            }
+          />
 
           {/* ---------------- AUDITOR ---------------- */}
 

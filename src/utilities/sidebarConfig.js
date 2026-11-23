@@ -145,37 +145,42 @@ export const sidebarConfig = {
 
     auditee: {
         self_check: [
+            // {
+            //     label: "Consent Scanner Tool",
+            //     icon: FiShield,
+            //     children: [
+            //         {
+            //             label: "Start a New Scan",
+            //             icon: FiFileText,
+            //             path: "/user/self-check/consent-scanner",
+            //         },
+            //         {
+            //             label: "View Your Scans",
+            //             icon: FiActivity,
+            //             path: "/user/self-check/scans",
+            //         },
+            //     ],
+            // },
+            // {
+            //     label: "PII-in-Transit Scanner Tool",
+            //     icon: FiShield,
+            //     children: [
+            //         {
+            //             label: "Start a New Scan",
+            //             icon: FiFileText,
+            //             path: "/user/self-check/data-breach-scanner",
+            //         },
+            //         {
+            //             label: "View Your Scans",
+            //             icon: FiActivity,
+            //             path: "/user/self-check/breach-scans",
+            //         },
+            //     ],
+            // },
             {
-                label: "Consent Scanner Tool",
-                icon: FiShield,
-                children: [
-                    {
-                        label: "Start a New Scan",
-                        icon: FiFileText,
-                        path: "/user/self-check/consent-scanner",
-                    },
-                    {
-                        label: "View Your Scans",
-                        icon: FiActivity,
-                        path: "/user/self-check/scans",
-                    },
-                ],
-            },
-            {
-                label: "PII-in-Transit Scanner Tool",
-                icon: FiShield,
-                children: [
-                    {
-                        label: "Start a New Scan",
-                        icon: FiFileText,
-                        path: "/user/self-check/data-breach-scanner",
-                    },
-                    {
-                        label: "View Your Scans",
-                        icon: FiActivity,
-                        path: "/user/self-check/breach-scans",
-                    },
-                ],
+                label:"View Scans and Reports",
+                icon: FiBookOpen,
+                path:"/user/self-check/results"
             },
             {
                 label: "Learn DPDP",

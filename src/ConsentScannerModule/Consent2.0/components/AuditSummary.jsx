@@ -39,11 +39,11 @@ const AuditSummary = ({ steps = [], summary = null }) => {
     <section>
       {/* Header */}
       <div className="mb-3">
-        <p className="text-xs font-medium uppercase tracking-wider text-indigo-400">
+        <p className="text-xs font-semibold uppercase tracking-wider text-[#075EB5]">
           Audit Overview
         </p>
 
-        <h2 className="mt-1 text-base font-semibold text-slate-100">
+        <h2 className="mt-1 text-base font-semibold text-[#14213D]">
           Assessment Summary
         </h2>
 
@@ -59,8 +59,8 @@ const AuditSummary = ({ steps = [], summary = null }) => {
           label="Total Steps"
           value={totalSteps}
           description="Evaluated"
-          iconClass="text-indigo-400"
-          iconBg="bg-indigo-500/10 border-indigo-500/20"
+          iconClass="text-[#075EB5]"
+          iconBg="bg-blue-50 border-blue-100"
         />
 
         <SummaryCard
@@ -68,8 +68,8 @@ const AuditSummary = ({ steps = [], summary = null }) => {
           label="Compliant"
           value={compliant}
           description="Requirements met"
-          iconClass="text-emerald-400"
-          iconBg="bg-emerald-500/10 border-emerald-500/20"
+          iconClass="text-emerald-600"
+          iconBg="bg-emerald-50 border-emerald-100"
         />
 
         <SummaryCard
@@ -77,8 +77,8 @@ const AuditSummary = ({ steps = [], summary = null }) => {
           label="Partial"
           value={partial}
           description="Needs attention"
-          iconClass="text-amber-400"
-          iconBg="bg-amber-500/10 border-amber-500/20"
+          iconClass="text-amber-600"
+          iconBg="bg-amber-50 border-amber-100"
         />
 
         <SummaryCard
@@ -86,8 +86,8 @@ const AuditSummary = ({ steps = [], summary = null }) => {
           label="Non-Compliant"
           value={nonCompliant}
           description="Requirements not met"
-          iconClass="text-red-400"
-          iconBg="bg-red-500/10 border-red-500/20"
+          iconClass="text-red-600"
+          iconBg="bg-red-50 border-red-100"
         />
       </div>
     </section>
@@ -107,18 +107,18 @@ const SummaryCard = ({
   iconBg,
 }) => {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/70 p-4 transition-colors duration-200 hover:border-slate-700">
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-medium text-slate-500">
             {label}
           </p>
 
-          <p className="mt-2 text-2xl font-semibold text-slate-100">
+          <p className="mt-2 text-2xl font-semibold tabular-nums text-[#14213D]">
             {value}
           </p>
 
-          <p className="mt-1 text-[11px] text-slate-600">
+          <p className="mt-1 text-[11px] text-slate-500">
             {description}
           </p>
         </div>

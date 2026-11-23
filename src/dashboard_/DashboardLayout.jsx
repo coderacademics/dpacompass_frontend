@@ -11,27 +11,47 @@ import Sidebar from "../dashboard_old/Sidebar";
 
 export default function DashboardLayout({ role, children }) {
 
-    const normalizedRole = String(role || "admin").toLowerCase();
+    const normalizedRole = String(role || "admin")
+        .trim()
+        .toLowerCase();
 
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
     const [auditMode, setAuditMode] = useState(() => {
         const stored = localStorage.getItem("auditee_mode");
 
-        return stored === "third_party" ||
-            stored === "third_party_audit"
+        const normalized = String(stored || "")
+            .trim()
+            .toLowerCase()
+            .replace(/[\s-]+/g, "_");
+
+        return normalized === "third_party" ||
+            normalized === "third_party_audit"
             ? "third_party_audit"
             : "self_check";
     });
 
     const handleAuditModeChange = (mode) => {
-        if (
-            mode !== "self_check" &&
-            mode !== "third_party_audit"
-        ) return;
+        const normalized = String(mode || "")
+            .trim()
+            .toLowerCase()
+            .replace(/[\s-]+/g, "_");
 
-        setAuditMode(mode);
-        localStorage.setItem("auditee_mode", mode);
+        if (
+            normalized !== "self_check" &&
+            normalized !== "third_party_audit" &&
+            normalized !== "third_party"
+        ) {
+            return;
+        }
+
+        const nextMode =
+            normalized === "third_party"
+                ? "third_party_audit"
+                : normalized;
+
+        setAuditMode(nextMode);
+        localStorage.setItem("auditee_mode", nextMode);
     };
 
     useEffect(() => {
@@ -52,14 +72,17 @@ export default function DashboardLayout({ role, children }) {
 
     const dashboardContent =
         normalizedRole === "auditee" &&
-            isValidElement(children)
+        isValidElement(children)
             ? cloneElement(children, { auditMode })
             : children;
+
+    // Temporary debugging
+    console.log("Dashboard Layout Role:", normalizedRole);
+    console.log("Dashboard Layout Audit Mode:", auditMode);
 
     return (
         <div className="dashboard-theme dashboard-shell">
 
-            {/* SIDEBAR */}
             <Sidebar
                 role={normalizedRole}
                 auditMode={auditMode}
@@ -77,10 +100,8 @@ export default function DashboardLayout({ role, children }) {
                 />
             )}
 
-            {/* MAIN APPLICATION LAYOUT */}
             <main className="dashboard-main">
 
-                {/* MOBILE HEADER */}
                 <header className="dashboard-mobile-header">
 
                     <button
@@ -102,20 +123,16 @@ export default function DashboardLayout({ role, children }) {
 
                 </header>
 
-                {/* PAGE CONTENT */}
                 <div className="dashboard-workspace">
                     {dashboardContent}
                 </div>
 
-                {/* GLOBAL DASHBOARD FOOTER */}
                 <footer className="dashboard-footer">
-
                     <p className="dashboard-footer-copyright">
                         © {new Date().getFullYear()} Developed by{" "}
                         Centre for Development of Advanced Computing
                         {" "}(C-DAC), Government of India
                     </p>
-
                 </footer>
 
             </main>

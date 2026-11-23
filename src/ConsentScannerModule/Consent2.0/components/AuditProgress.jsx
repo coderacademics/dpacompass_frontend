@@ -226,26 +226,26 @@ const AuditProgress = ({
 
     return (
         <div className="space-y-6">
-            <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/70">
+            <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
                 {/* HEADER */}
-                <div className="flex flex-col gap-4 border-b border-slate-800 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-4 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-4">
-                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-indigo-500/20 bg-indigo-500/10">
-                            <FileText className="h-6 w-6 text-indigo-400" />
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-blue-200 bg-blue-50">
+                            <FileText className="h-6 w-6 text-[#075EB5]" />
                         </div>
 
                         <div>
-                            <h2 className="text-xl font-semibold text-slate-100">
+                            <h2 className="text-xl font-semibold text-[#14213D]">
                                 Audit Progress
                             </h2>
 
-                            <p className="mt-1 text-sm text-slate-400">
+                            <p className="mt-1 text-sm text-slate-500">
                                 Live activities reported by the audit engine
                             </p>
                         </div>
                     </div>
 
-                    <div className="w-fit rounded-xl border border-slate-700 bg-slate-950/50 px-5 py-3 sm:text-right">
+                    <div className="w-fit rounded-xl border border-slate-200 bg-slate-50 px-5 py-3 sm:text-right">
                         <div className="flex items-center gap-2 sm:justify-end">
                             <span
                                 className={`h-2.5 w-2.5 rounded-full ${
@@ -253,24 +253,24 @@ const AuditProgress = ({
                                         ? "bg-emerald-400"
                                         : isFailed
                                         ? "bg-red-400"
-                                        : "animate-pulse bg-indigo-400"
+                                        : "animate-pulse bg-[#075EB5]"
                                 }`}
                             />
 
                             <span
                                 className={`text-sm font-semibold ${
                                     isComplete
-                                        ? "text-emerald-300"
+                                        ? "text-emerald-700"
                                         : isFailed
-                                        ? "text-red-300"
-                                        : "text-indigo-300"
+                                        ? "text-red-700"
+                                        : "text-[#075EB5]"
                                 }`}
                             >
                                 {statusLabel}
                             </span>
                         </div>
 
-                        <p className="mt-1 text-sm text-slate-400">
+                        <p className="mt-1 text-sm text-slate-500">
                             {statusDescription}
                         </p>
                     </div>
@@ -280,9 +280,9 @@ const AuditProgress = ({
                 <div className="px-6 py-6">
                     <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <div className="flex items-center gap-3">
-                            <div className="h-2 w-2 rounded-full bg-indigo-400" />
+                            <div className="h-2 w-2 rounded-full bg-[#075EB5]" />
 
-                            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-400">
+                            <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-500">
                                 Audit Requirements
                             </h3>
                         </div>
@@ -293,7 +293,7 @@ const AuditProgress = ({
                             </span>
 
                             {runningStep && (
-                                <span className="rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3 py-1 font-medium text-indigo-300">
+                                <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 font-medium text-[#075EB5]">
                                     Step {currentIndex + 1} of{" "}
                                     {displaySteps.length}
                                 </span>
@@ -302,7 +302,7 @@ const AuditProgress = ({
                     </div>
 
                     <div className="relative">
-                        <div className="absolute bottom-5 left-5 top-5 w-px bg-slate-800" />
+                        <div className="absolute bottom-5 left-5 top-5 w-px bg-slate-100" />
 
                         <div className="space-y-4">
                             {displaySteps.map((step) => (
@@ -319,8 +319,8 @@ const AuditProgress = ({
                 </div>
 
                 {/* FOOTER */}
-                <div className="flex flex-col gap-5 border-t border-slate-800 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex items-center gap-3 text-sm text-slate-400">
+                <div className="flex flex-col gap-5 border-t border-slate-200 px-6 py-5 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="flex items-center gap-3 text-sm text-slate-500">
                         <Clock3 className="h-5 w-5 text-slate-500" />
 
                         <span>
@@ -335,16 +335,16 @@ const AuditProgress = ({
                     <div className="flex w-full items-center gap-4 lg:max-w-xl">
                         <BarChart3 className="h-5 w-5 shrink-0 text-slate-500" />
 
-                        <span className="whitespace-nowrap text-sm text-slate-400">
+                        <span className="whitespace-nowrap text-sm text-slate-500">
                             Overall Progress
                         </span>
 
-                        <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-800">
+                        <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100">
                             <div
                                 className={`h-full rounded-full transition-all duration-700 ease-out ${
                                     isFailed
                                         ? "bg-red-500"
-                                        : "bg-indigo-500"
+                                        : "bg-[#075EB5]"
                                 }`}
                                 style={{
                                     width: `${Math.round(
@@ -354,7 +354,7 @@ const AuditProgress = ({
                             />
                         </div>
 
-                        <span className="w-12 text-right text-sm font-semibold text-slate-200">
+                        <span className="w-12 text-right text-sm font-semibold text-slate-700">
                             {Math.round(overallProgress)}%
                         </span>
                     </div>
@@ -391,22 +391,22 @@ const ProgressItem = ({
                 <div
                     className={`flex h-11 w-11 items-center justify-center rounded-full border-2 ${
                         completed
-                            ? "border-emerald-400 bg-emerald-500/10"
+                            ? "border-emerald-500 bg-emerald-50"
                             : running
-                            ? "border-indigo-400 bg-indigo-500/10"
+                            ? "border-[#075EB5] bg-blue-50"
                             : failed
-                            ? "border-red-400 bg-red-500/10"
-                            : "border-slate-700 bg-slate-900"
+                            ? "border-red-500 bg-red-50"
+                            : "border-slate-200 bg-slate-100"
                     }`}
                 >
                     {completed ? (
-                        <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                        <CheckCircle2 className="h-5 w-5 text-emerald-700" />
                     ) : running ? (
-                        <Loader2 className="h-5 w-5 animate-spin text-indigo-400" />
+                        <Loader2 className="h-5 w-5 animate-spin text-[#075EB5]" />
                     ) : failed ? (
-                        <Circle className="h-4 w-4 text-red-400" />
+                        <Circle className="h-4 w-4 text-red-700" />
                     ) : (
-                        <Circle className="h-4 w-4 text-slate-600" />
+                        <Circle className="h-4 w-4 text-slate-500" />
                     )}
                 </div>
             </div>
@@ -415,12 +415,12 @@ const ProgressItem = ({
             <div
                 className={`min-w-0 flex-1 rounded-xl border px-5 py-5 transition-all duration-300 ${
                     completed
-                        ? "border-slate-800 bg-slate-900/40"
+                        ? "border-slate-200 bg-white"
                         : running
-                        ? "border-indigo-500/40 bg-slate-900/80 shadow-lg shadow-indigo-950/20"
+                        ? "border-blue-200 bg-blue-50 shadow-sm shadow-blue-100"
                         : failed
-                        ? "border-red-500/30 bg-red-500/5"
-                        : "border-slate-800 bg-slate-950/30"
+                        ? "border-red-200 bg-red-50"
+                        : "border-slate-200 bg-slate-50"
                 }`}
             >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -428,12 +428,12 @@ const ProgressItem = ({
                         <p
                             className={`text-xs font-semibold uppercase tracking-wider ${
                                 completed
-                                    ? "text-emerald-400/80"
+                                    ? "text-emerald-700/80"
                                     : running
-                                    ? "text-indigo-400"
+                                    ? "text-[#075EB5]"
                                     : failed
-                                    ? "text-red-400"
-                                    : "text-slate-600"
+                                    ? "text-red-700"
+                                    : "text-slate-500"
                             }`}
                         >
                             {id}
@@ -443,7 +443,7 @@ const ProgressItem = ({
                             className={`mt-1 text-lg font-semibold ${
                                 queued
                                     ? "text-slate-500"
-                                    : "text-slate-100"
+                                    : "text-[#14213D]"
                             }`}
                         >
                             {title}
@@ -452,15 +452,15 @@ const ProgressItem = ({
                         <p
                             className={`mt-1.5 text-sm leading-6 ${
                                 queued
-                                    ? "text-slate-600"
-                                    : "text-slate-400"
+                                    ? "text-slate-500"
+                                    : "text-slate-500"
                             }`}
                         >
                             {description}
                         </p>
 
                         {running && (
-                            <div className="mt-4 flex items-center gap-2 text-xs text-indigo-300">
+                            <div className="mt-4 flex items-center gap-2 text-xs text-[#075EB5]">
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                                 Processing this audit requirement...
                             </div>
@@ -470,28 +470,28 @@ const ProgressItem = ({
                     {/* STATUS */}
                     <div className="shrink-0">
                         {completed && (
-                            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-300">
+                            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
                                 <CheckCircle2 className="h-4 w-4" />
                                 Completed
                             </span>
                         )}
 
                         {running && (
-                            <span className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-2 text-sm font-semibold text-indigo-300">
+                            <span className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-[#075EB5]">
                                 <Loader2 className="h-4 w-4 animate-spin" />
                                 In Progress
                             </span>
                         )}
 
                         {queued && (
-                            <span className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-medium text-slate-400">
+                            <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-4 py-2 text-sm font-medium text-slate-500">
                                 <Clock3 className="h-4 w-4" />
                                 Queued
                             </span>
                         )}
 
                         {failed && (
-                            <span className="inline-flex items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-300">
+                            <span className="inline-flex items-center gap-2 rounded-full border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700">
                                 <Circle className="h-4 w-4" />
                                 {normalizedStatus === "CANCELLED"
                                     ? "Cancelled"

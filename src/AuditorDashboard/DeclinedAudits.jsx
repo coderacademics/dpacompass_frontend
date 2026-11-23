@@ -432,7 +432,7 @@ export default function DeclinedAudits() {
                                 <thead>
                                     <tr>
                                         <th scope="col">Application</th>
-                                        <th scope="col">Auditor</th>
+                                        {/* <th scope="col">Auditor</th> */}
                                         <th scope="col">Reason</th>
                                         <th scope="col">Assigned on</th>
                                         {/* <th scope="col">Status</th> */}
@@ -459,7 +459,7 @@ export default function DeclinedAudits() {
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td>{audit.auditor_name}</td>
+                                                    {/* <td>{audit.auditor_name}</td> */}
                                                     <td><div className="da-reason" title={audit.rejection_reason}>{audit.rejection_reason}</div></td>
                                                     <td><span className="da-date"><FiCalendar aria-hidden="true" />{formatDate(audit.created_at)}</span></td>
                                                     {/* <td><span className="da-status"><FiSlash aria-hidden="true" />{normalizeStatus(audit.status)}</span></td> */}

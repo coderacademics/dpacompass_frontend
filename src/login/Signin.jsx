@@ -3,8 +3,8 @@ import { FiEye, FiEyeOff, FiRefreshCw } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import dpacompassBg from "../assets/background_landingpage.jpeg";
 import { API_BASE_URL } from "../config";
+import BackgroundLayout from "./BackgroundLayout";
 
 
 const inputClass =
@@ -499,11 +499,8 @@ const Signin = () => {
 
     if (showOtpScreen) {
         return (
-            <main
-                className="relative flex min-h-screen items-center justify-center overflow-hidden bg-contain bg-center bg-no-repeat bg-[#eaf7ff] px-4 py-8 sm:px-6"
-                style={{ backgroundImage: `url(${dpacompassBg})` }}
-            >
-                <div className="absolute inset-0 bg-white/25" aria-hidden="true" />
+            <BackgroundLayout contentClassName="items-center">
+                <div className="flex w-full justify-center">
                 <section
                     className="relative z-10 w-full max-w-lg rounded-2xl border border-white/80 bg-white/90 p-7 shadow-2xl shadow-sky-900/20 backdrop-blur-xl sm:p-9"
                     style={{ animation: "otpCardEnter 450ms ease-out both" }}
@@ -516,9 +513,6 @@ const Signin = () => {
                     </style>
 
                     <header className="mb-7 text-center">
-                        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
-                            CDAC · MeitY
-                        </p>
                         <h1 className="text-3xl font-bold tracking-tight text-slate-900">
                             DPACOMPASS
                         </h1>
@@ -613,27 +607,14 @@ const Signin = () => {
                         <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />
                         Secure sign-in verification
                     </div>
-
-                    <footer className="mt-6 border-t border-slate-200 pt-4 text-center">
-                        <p className="text-xs leading-5 text-slate-500">
-                            Data Privacy · Security · Compliance
-                        </p>
-                    </footer>
                 </section>
-            </main>
+                </div>
+            </BackgroundLayout>
         );
     }
 
     return (
-        <main
-            className="relative flex min-h-screen items-center justify-center overflow-hidden bg-contain bg-center bg-no-repeat bg-[#eaf7ff] px-4 py-8 sm:px-6"
-            style={{ backgroundImage: `url(${dpacompassBg})` }}
-        >
-            <div
-                className="absolute inset-0 bg-white/25"
-                aria-hidden="true"
-            />
-
+        <BackgroundLayout contentClassName="items-center">
             <section
                 className={`relative z-10 w-full max-w-lg rounded-2xl border border-white/80 bg-white/90 p-7 shadow-2xl shadow-sky-900/20 backdrop-blur-xl transition-all duration-300 sm:p-9 ${
                     isLeavingSignin
@@ -642,10 +623,6 @@ const Signin = () => {
                 }`}
             >
                 <header className="mb-6 text-center">
-                    <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">
-                        CDAC · MeitY
-                    </p>
-
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900">
                         DPACOMPASS
                     </h1>
@@ -853,14 +830,8 @@ const Signin = () => {
                         </a>
                     </p>
                 </form>
-
-                <footer className="mt-6 border-t border-slate-200 pt-4 text-center">
-                    <p className="text-xs leading-5 text-slate-500">
-                        Data Privacy · Security · Compliance
-                    </p>
-                </footer>
             </section>
-        </main>
+        </BackgroundLayout>
     );
 };
 
