@@ -46,7 +46,7 @@ const SCANNERS = [
     },
     {
         id: "breach",
-        title: "PII-in-Transit / Data Breach Scanner",
+        title: "PII-in-Transit",
         subtitle: "Technical Safeguards Assessment",
         description:
             "Inspect your application for potential personal information exposure and identify security weaknesses in data transmission.",
@@ -81,22 +81,20 @@ const COLOR_STYLES = {
     },
 };
 
-function ScannerCard({ scanner, selected, onToggle }) {
+function ScannerCard({ scanner, selected, onToggle, singlePageOnly, onSinglePageChange }) {
     const styles = COLOR_STYLES[scanner.color];
     const Icon = scanner.icon;
 
     return (
         <div
-            className={`group relative overflow-hidden rounded-2xl border bg-white transition-all duration-300 ${
-                selected
+            className={`group relative overflow-hidden rounded-2xl border bg-white transition-all duration-300 ${selected
                     ? `${styles.selected} shadow-md`
                     : "border-slate-200 shadow-sm hover:-translate-y-1 hover:border-slate-300 hover:shadow-lg"
-            }`}
+                }`}
         >
             <div
-                className={`absolute left-0 top-0 h-1 w-full ${
-                    selected ? styles.top : "bg-transparent"
-                }`}
+                className={`absolute left-0 top-0 h-1 w-full ${selected ? styles.top : "bg-transparent"
+                    }`}
             />
 
             <div className="p-5 sm:p-7">
@@ -130,11 +128,10 @@ function ScannerCard({ scanner, selected, onToggle }) {
                         onClick={onToggle}
                         aria-label={`Select ${scanner.title}`}
                         aria-pressed={selected}
-                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border transition-all duration-200 ${
-                            selected
+                        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border transition-all duration-200 ${selected
                                 ? `${styles.checkbox} text-white`
                                 : "border-slate-300 bg-white text-transparent hover:border-slate-400"
-                        }`}
+                            }`}
                     >
                         <Check size={16} strokeWidth={3} />
                     </button>
@@ -182,11 +179,10 @@ function ScannerCard({ scanner, selected, onToggle }) {
                         </div>
 
                         <span
-                            className={`text-[10px] font-semibold ${
-                                selected
+                            className={`text-[10px] font-semibold ${selected
                                     ? "text-emerald-600"
                                     : "text-slate-400"
-                            }`}
+                                }`}
                         >
                             {selected ? "Selected" : "Not selected"}
                         </span>
@@ -197,16 +193,38 @@ function ScannerCard({ scanner, selected, onToggle }) {
                             ? "This scanner will be included in your self-check assessment."
                             : "Select this scanner if you want to include it in your assessment."}
                     </p>
+
+                    {scanner.id === "consent" && (
+                        <label className={`mt-4 flex cursor-pointer items-start gap-3 rounded-xl border px-3.5 py-3 transition ${selected
+                                ? "border-blue-100 bg-blue-50/70 hover:border-blue-200"
+                                : "border-slate-200 bg-slate-50 opacity-70"
+                            }`}>
+                            <input
+                                type="checkbox"
+                                checked={singlePageOnly}
+                                disabled={!selected}
+                                onChange={(e) => onSinglePageChange(e.target.checked)}
+                                className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
+                            />
+                            <span>
+                                <span className="block text-xs font-semibold text-slate-700">
+                                    Crawl only this page
+                                </span>
+                                <span className="mt-1 block text-[11px] leading-5 text-slate-500">
+                                    Checked: single-page scan. Unchecked: full website scan.
+                                </span>
+                            </span>
+                        </label>
+                    )}
                 </div>
 
                 <button
                     type="button"
                     onClick={onToggle}
-                    className={`mt-5 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-200 ${
-                        selected
+                    className={`mt-5 flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-200 ${selected
                             ? "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100"
                             : "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300 hover:bg-blue-100"
-                    }`}
+                        }`}
                 >
                     {selected ? (
                         <>
@@ -230,6 +248,7 @@ export default function SelfCheckWorkspace() {
 
     const [applicationUrl, setApplicationUrl] = useState("");
     const [selectedScanners, setSelectedScanners] = useState([]);
+    const [singlePageOnly, setSinglePageOnly] = useState(false);
 
     const [error, setError] = useState("");
     const [showReview, setShowReview] = useState(false);
@@ -319,7 +338,7 @@ export default function SelfCheckWorkspace() {
                 localStorage.getItem("user") || "{}"
             );
             console.log(user.username);
-            
+
             return (
                 user.username ||
                 user.dpacompass_username ||
@@ -371,7 +390,10 @@ export default function SelfCheckWorkspace() {
             const normalizedUrl = applicationUrl.trim();
 
             const scannerTasks = [];
-            
+            // console.log(
+            //     "Frontend selected mode:",
+            //     singlePageOnly ? "selected" : "full"
+            // );
             if (selectedScanners.includes("consent")) {
                 scannerTasks.push({
                     key: "consent_management",
@@ -380,6 +402,7 @@ export default function SelfCheckWorkspace() {
                             url: normalizedUrl,
                             public_audit_id: publicAuditId,
                             dpacompass_username: dpacompassUsername,
+                            mode: singlePageOnly ? "selected" : "full",
                         }),
                 });
             }
@@ -472,7 +495,7 @@ export default function SelfCheckWorkspace() {
 
             setError(
                 err.message ||
-                    "Unable to start the assessment. Please try again."
+                "Unable to start the assessment. Please try again."
             );
 
             setIsStarting(false);
@@ -489,6 +512,7 @@ export default function SelfCheckWorkspace() {
 
         setApplicationUrl("");
         setSelectedScanners([]);
+        setSinglePageOnly(false);
         setError("");
         setShowReview(false);
         setStartingMessage("");
@@ -523,7 +547,7 @@ export default function SelfCheckWorkspace() {
 
             {/* Welcome Banner */}
             <section className="relative mb-7 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-                <div className="absolute left-0 top-0 h-1 w-full bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-500" />
+                <div className="absolute left-0 top-0 h-1 w-full bg-linear-to-r from-blue-500 via-indigo-500 to-emerald-500" />
 
                 <div className="relative flex flex-col justify-between gap-5 p-6 sm:p-8 lg:flex-row lg:items-center">
                     <div className="max-w-2xl">
@@ -674,6 +698,11 @@ export default function SelfCheckWorkspace() {
                             scanner={scanner}
                             selected={selectedScanners.includes(scanner.id)}
                             onToggle={() => toggleScanner(scanner.id)}
+                            singlePageOnly={singlePageOnly}
+                            onSinglePageChange={(checked) => {
+                                setSinglePageOnly(checked);
+                                setShowReview(false);
+                            }}
                         />
                     ))}
                 </div>
@@ -732,9 +761,8 @@ export default function SelfCheckWorkspace() {
                                         >
                                             <div className="flex items-center gap-2">
                                                 <div
-                                                    className={`flex h-8 w-8 items-center justify-center rounded-lg ${
-                                                        COLOR_STYLES[scanner.color].icon
-                                                    }`}
+                                                    className={`flex h-8 w-8 items-center justify-center rounded-lg ${COLOR_STYLES[scanner.color].icon
+                                                        }`}
                                                 >
                                                     <Icon size={16} />
                                                 </div>
@@ -817,9 +845,8 @@ export default function SelfCheckWorkspace() {
                             <p className="mt-1 text-xs text-slate-500">
                                 {selectedCount === 0
                                     ? "Select at least one scanner to continue."
-                                    : `${selectedCount} scanner${
-                                          selectedCount > 1 ? "s" : ""
-                                      } selected for assessment.`}
+                                    : `${selectedCount} scanner${selectedCount > 1 ? "s" : ""
+                                    } selected for assessment.`}
                             </p>
                         </div>
                     </div>

@@ -237,7 +237,7 @@ const KeywordManagement = () => {
 
                 <div>
                     <p className="text-sm text-slate-500 mb-2">
-                        Admin Dashboard / Data Breach Scanner
+                        Admin Dashboard / PII-in Transit Scanner
                     </p>
 
                     <h1 className="text-2xl md:text-3xl font-bold">

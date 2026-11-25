@@ -39,8 +39,9 @@ export const startSelfCheckConsentScanner = async ({
     username = "",
     password = "",
     authentication_required = false,
+    mode
 }) => {
-    console.log("[SelfCheck] Public Audit ID:", public_audit_id);
+    // console.log("[SelfCheck] Public Audit ID:", public_audit_id);
 
     return startAudit({
         public_audit_id,
@@ -50,9 +51,10 @@ export const startSelfCheckConsentScanner = async ({
         username,
         password,
         authentication_required,
+        crawl_mode : mode
     });
 };
-// Start PII-in-Transit / Data Breach Scanner.
+// Start PII-in-Transit / Scanner.
 export const startSelfCheckDataBreachScanner = async ({
     publicAuditId,
     url,

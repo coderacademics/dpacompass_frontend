@@ -930,7 +930,7 @@ export default function SelfCheckScansPage() {
                 console.error("API request failed:", breachResult.reason);
 
                 errors.push(
-                    `Data Breach Scanner: ${breachResult.reason?.message ||
+                    `PII in-Transit Scanner: ${breachResult.reason?.message ||
                     "Unable to retrieve scan history."
                     }`
                 );

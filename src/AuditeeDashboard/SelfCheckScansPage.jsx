@@ -46,7 +46,7 @@ const CONSENT_TOOL = {
 
 const BREACH_TOOL = {
     tool: "data_breach",
-    label: "PII-in-Transit / Data Breach Scanner",
+    label: "PII-in-Transit Scanner",
 };
 
 const ACTIVE_STATUSES = ["queued", "running"];

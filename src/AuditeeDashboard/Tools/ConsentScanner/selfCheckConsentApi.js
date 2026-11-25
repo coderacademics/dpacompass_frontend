@@ -46,6 +46,7 @@ const auditUrl = (publicAuditId) =>
 |--------------------------------------------------------------------------
 */
 
+
 export async function startSelfCheckConsentScan({
     url,
     public_audit_id,
@@ -53,8 +54,12 @@ export async function startSelfCheckConsentScan({
     password = "",
     authentication_required = false,
     dpacompass_username,
-    max_pages = 20,
+    max_pages,
+    mode,
 }) {
+    console.log("Mode :",mode);
+    console.log("URL", url);
+    
     if (!url?.trim()) {
         throw new Error("Website URL is required.");
     }
@@ -67,15 +72,24 @@ export async function startSelfCheckConsentScan({
         throw new Error("DPACOMPASS username is missing.");
     }
 
+    // Only allow the supported crawl modes
+    if (!["selected", "full"].includes(mode)) {
+        throw new Error(
+            'Invalid crawl mode. Use "selected" or "full".'
+        );
+    }
+
     const parsedMaxPages = Number(max_pages);
 
     if (!Number.isInteger(parsedMaxPages) || parsedMaxPages < 1) {
-        throw new Error("Maximum pages must be a valid positive integer.");
+        throw new Error(
+            "Maximum pages must be a valid positive integer."
+        );
     }
 
     const payload = {
         url: url.trim(),
-        crawl_mode: "full",
+        crawl_mode: mode,
         dpacompass_username: dpacompass_username.trim(),
         public_audit_id: public_audit_id.trim(),
         max_pages: parsedMaxPages,
@@ -103,6 +117,7 @@ export async function startSelfCheckConsentScan({
 
     return parseResponse(response);
 }
+
 
 
 /*

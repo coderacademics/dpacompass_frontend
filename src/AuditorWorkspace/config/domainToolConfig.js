@@ -12,7 +12,7 @@ export const DOMAIN_TOOL_CONFIG = {
     41: [
         {
             id: "data_breach_scanner",
-            name: "Data Breach Scanner",
+            name: "PII-in Transit Scanner",
             description:
                 "Scan the application for security weaknesses and potential data breach risks.",
             route: (auditId) =>
