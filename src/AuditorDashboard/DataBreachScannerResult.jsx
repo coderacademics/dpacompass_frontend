@@ -31,16 +31,41 @@ const titleCase = (value = "") =>
 const severityClass = (severity = "") => {
     switch (String(severity).toUpperCase()) {
         case "CRITICAL":
-            return "border-red-700 bg-red-950/40 text-red-300";
+            return "border-rose-200 bg-rose-50 text-rose-700";
         case "HIGH":
-            return "border-orange-700 bg-orange-950/40 text-orange-300";
+            return "border-orange-200 bg-orange-50 text-orange-700";
         case "MEDIUM":
-            return "border-amber-700 bg-amber-950/40 text-amber-300";
+            return "border-amber-200 bg-amber-50 text-amber-700";
         case "LOW":
-            return "border-sky-700 bg-sky-950/40 text-sky-300";
+            return "border-sky-200 bg-sky-50 text-sky-700";
         default:
-            return "border-slate-700 bg-slate-800 text-slate-300";
+            return "border-slate-200 bg-slate-100 text-slate-700";
     }
+};
+
+const getTlsVersion = (scanner = {}) => {
+    const candidates = [
+        scanner.tls_version,
+        scanner.tlsVersion,
+        scanner.version,
+        scanner.protocol_version,
+        scanner.protocolVersion,
+        scanner.details?.tls_version,
+        scanner.details?.tlsVersion,
+        scanner.details?.version,
+        scanner.metadata?.tls_version,
+        scanner.metadata?.tlsVersion,
+        scanner.metadata?.version,
+        scanner.result?.tls_version,
+        scanner.result?.tlsVersion,
+        scanner.result?.version,
+    ];
+
+    const version = candidates.find(
+        (value) => typeof value === "string" && value.trim()
+    );
+
+    return version ? version.trim() : null;
 };
 
 const assessmentStyle = (assessment = "") => {
@@ -49,26 +74,26 @@ const assessmentStyle = (assessment = "") => {
             return {
                 icon: CheckCircle2,
                 text: "Passed",
-                className: "text-emerald-300",
+                className: "text-emerald-700",
             };
         case "PARTIAL":
         case "WARNING":
             return {
                 icon: AlertTriangle,
                 text: "Needs attention",
-                className: "text-amber-300",
+                className: "text-amber-700",
             };
         case "FAIL":
             return {
                 icon: XCircle,
                 text: "Not passed",
-                className: "text-red-300",
+                className: "text-red-700",
             };
         default:
             return {
                 icon: Info,
                 text: titleCase(assessment || "Not assessed"),
-                className: "text-slate-300",
+                className: "text-slate-700",
             };
     }
 };
@@ -76,18 +101,18 @@ const assessmentStyle = (assessment = "") => {
 const checklistStatusStyle = (status = "") => {
     switch (String(status).toUpperCase()) {
         case "COMPLIANT":
-            return "border-emerald-700 bg-emerald-950/30 text-emerald-300";
+            return "border-emerald-200 bg-emerald-50 text-emerald-700";
         case "NON_COMPLIANT":
-            return "border-red-700 bg-red-950/30 text-red-300";
+            return "border-rose-200 bg-rose-50 text-rose-700";
         case "PARTIALLY_COMPLIANT":
-            return "border-amber-700 bg-amber-950/30 text-amber-300";
+            return "border-amber-200 bg-amber-50 text-amber-700";
         case "REVIEW":
-            return "border-blue-700 bg-blue-950/30 text-blue-300";
+            return "border-blue-200 bg-blue-50 text-blue-700";
         case "NOT_APPLICABLE":
-            return "border-violet-700 bg-violet-950/30 text-violet-300";
+            return "border-violet-200 bg-violet-50 text-violet-700";
         case "NOT_EVALUATED":
         default:
-            return "border-slate-600 bg-slate-800 text-slate-300";
+            return "border-slate-200 bg-slate-100 text-slate-700";
     }
 };
 
@@ -106,20 +131,20 @@ const checklistStatusLabel = (status = "") => {
 
 function ChecklistMetric({ label, value, className }) {
     return (
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-800 bg-[#070d1d] px-3 py-2.5">
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5">
             <span className={`rounded-full border px-2.5 py-1 text-xs font-medium ${className}`}>
                 {label}
             </span>
-            <span className="text-sm font-semibold text-white">{value ?? 0}</span>
+            <span className="text-sm font-semibold text-slate-900">{value ?? 0}</span>
         </div>
     );
 }
 
 function MetricCard({ label, value, helper }) {
     return (
-        <div className="rounded-xl border border-slate-800 bg-[#0b1324] p-4">
-            <p className="text-sm text-slate-400">{label}</p>
-            <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-sm text-slate-600">{label}</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-900">{value}</p>
             {helper && <p className="mt-1 text-xs text-slate-500">{helper}</p>}
         </div>
     );
@@ -133,10 +158,10 @@ function ScannerResult({ scanner }) {
     const issues = Array.isArray(scanner.issues) ? scanner.issues : [];
 
     return (
-        <article className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+        <article className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                    <h4 className="font-semibold text-slate-100">
+                    <h4 className="font-semibold text-slate-900">
                         {titleCase(scanner.scanner)}
                     </h4>
                     <div className={`mt-2 flex items-center gap-2 text-sm ${assessment.className}`}>
@@ -145,26 +170,47 @@ function ScannerResult({ scanner }) {
                     </div>
                 </div>
 
-                <div className="text-left sm:text-right">
-                    <p className="text-lg font-semibold text-white">
-                        {scanner.score ?? "—"}
-                        <span className="text-sm font-normal text-slate-500">
-                            {" "}/ {scanner.max_score ?? "—"}
-                        </span>
+                <div className="sm:text-right">
+                    <span
+                        className={`inline-flex items-center rounded-full border px-3 py-1.5 text-xs font-medium ${
+                            issues.length === 0
+                                ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                : "border-amber-200 bg-amber-50 text-amber-800"
+                        }`}
+                    >
+                        {issues.length === 0
+                            ? "No findings"
+                            : `${issues.length} ${issues.length === 1 ? "finding" : "findings"}`}
+                    </span>
+                    <p className="mt-1 text-xs text-slate-500">
+                        {issues.length === 0
+                            ? "No issues reported"
+                            : "Requires review"}
                     </p>
-                    <p className="text-xs text-slate-500">Assessment score</p>
                 </div>
             </div>
+
+            {String(scanner.scanner || "").toLowerCase().includes("tls") &&
+                getTlsVersion(scanner) && (
+                    <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-sky-100 bg-sky-50/70 px-3 py-2.5">
+                        <span className="text-xs font-medium uppercase tracking-wide text-sky-800">
+                            TLS protocol version
+                        </span>
+                        <span className="rounded-md border border-sky-200 bg-white px-2.5 py-1 text-sm font-semibold text-sky-900">
+                            {getTlsVersion(scanner)}
+                        </span>
+                    </div>
+                )}
 
             {issues.length > 0 ? (
                 <div className="mt-4 space-y-3">
                     {issues.map((issue, index) => (
                         <div
                             key={`${issue.title || "issue"}-${index}`}
-                            className="rounded-lg border border-slate-800 bg-[#070d1d] p-3"
+                            className="rounded-lg border border-slate-200 bg-white p-3"
                         >
                             <div className="flex flex-wrap items-center gap-2">
-                                <p className="text-sm font-medium text-slate-200">
+                                <p className="text-sm font-medium text-slate-800">
                                     {issue.title || "Finding"}
                                 </p>
                                 {issue.severity && (
@@ -177,17 +223,17 @@ function ScannerResult({ scanner }) {
                             </div>
 
                             {issue.description && (
-                                <p className="mt-2 text-sm leading-6 text-slate-400">
+                                <p className="mt-2 text-sm leading-6 text-slate-600">
                                     {issue.description}
                                 </p>
                             )}
 
                             {issue.recommendation && (
-                                <div className="mt-3 rounded-lg bg-indigo-500/5 p-3">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-indigo-300">
+                                <div className="mt-3 rounded-lg border border-indigo-100 bg-indigo-50/70 p-3">
+                                    <p className="text-xs font-semibold uppercase tracking-wide text-indigo-700">
                                         Recommended action
                                     </p>
-                                    <p className="mt-1 text-sm leading-6 text-slate-300">
+                                    <p className="mt-1 text-sm leading-6 text-slate-700">
                                         {issue.recommendation}
                                     </p>
                                 </div>
@@ -196,7 +242,7 @@ function ScannerResult({ scanner }) {
                     ))}
                 </div>
             ) : (
-                <p className="mt-4 rounded-lg bg-emerald-500/5 p-3 text-sm text-emerald-200">
+                <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">
                     No issues were reported by this check.
                 </p>
             )}
@@ -302,7 +348,7 @@ export default function DataBreachScannerResult() {
                 title: "Potential personal information was detected",
                 description:
                     "The scan found patterns that may represent personal information. Please review the indicators below and confirm them manually.",
-                className: "border-amber-700/60 bg-amber-950/20 text-amber-200",
+                className: "border-amber-200 bg-amber-50 text-amber-800",
                 icon: AlertTriangle,
             };
         }
@@ -311,7 +357,7 @@ export default function DataBreachScannerResult() {
             title: "No personal information patterns were detected",
             description:
                 "The scan did not identify personal information patterns on the pages it checked. This does not guarantee that the website contains no personal information.",
-            className: "border-sky-700/60 bg-sky-950/20 text-sky-200",
+            className: "border-sky-200 bg-sky-50 text-sky-800",
             icon: Info,
         };
     }, [scan.pii_detected]);
@@ -319,27 +365,27 @@ export default function DataBreachScannerResult() {
     const PiiIcon = piiSummary.icon;
 
     return (
-        <div className="min-h-screen bg-[#070d1d] px-4 py-8 text-white">
+        <div className="min-h-screen bg-slate-50 px-4 py-8 text-slate-900">
             <div className="mx-auto max-w-6xl">
                 <button
                     type="button"
-                    onClick={() => navigate("/auditor/databreachscanner/")}
-                    className="mb-7 inline-flex items-center gap-2 text-sm text-indigo-400 hover:text-indigo-300"
+                    onClick={() => navigate(-1)}
+                    className="mb-7 inline-flex items-center gap-2 text-sm text-indigo-400 hover:text-indigo-700"
                 >
                     <ArrowLeft size={17} />
-                    Back to PII-in-Transit Scanner
+                    Back to Auditor Workspace
                 </button>
 
                 <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                        <div className="flex items-center gap-2 text-sm text-emerald-300">
+                        <div className="flex items-center gap-2 text-sm text-emerald-700">
                             <CheckCircle2 size={17} />
                             Scan completed
                         </div>
                         <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">
                             PII-in-Transit Scanner Result
                         </h1>
-                        <p className="mt-2 break-all text-sm text-slate-400">
+                        <p className="mt-2 break-all text-sm text-slate-600">
                             {publicAuditId}
                         </p>
                     </div>
@@ -348,7 +394,7 @@ export default function DataBreachScannerResult() {
                         type="button"
                         onClick={refreshAllResults}
                         disabled={refreshing || loading}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-700 bg-[#0b1324] px-4 py-2.5 text-sm hover:bg-slate-800 disabled:opacity-60"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm hover:bg-slate-100 disabled:opacity-60"
                     >
                         <RefreshCw
                             size={16}
@@ -361,14 +407,14 @@ export default function DataBreachScannerResult() {
                 {error && (
                     <div
                         role="alert"
-                        className="mb-6 rounded-xl border border-red-800 bg-red-950/30 p-4 text-sm text-red-300"
+                        className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
                     >
                         {error}
                     </div>
                 )}
 
                 {loading ? (
-                    <div className="flex items-center justify-center gap-3 rounded-xl border border-slate-800 bg-[#0b1324] p-12 text-slate-400">
+                    <div className="flex items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white p-12 text-slate-600">
                         <RefreshCw size={19} className="animate-spin" />
                         Loading scan result...
                     </div>
@@ -419,7 +465,7 @@ export default function DataBreachScannerResult() {
                                             {indicators.map((indicator) => (
                                                 <span
                                                     key={indicator}
-                                                    className="rounded-full border border-current/20 bg-black/10 px-3 py-1 text-xs"
+                                                    className="rounded-full border border-current/20 bg-white/70 px-3 py-1 text-xs"
                                                 >
                                                     {titleCase(indicator)}
                                                 </span>
@@ -433,35 +479,35 @@ export default function DataBreachScannerResult() {
                         <div className="space-y-4">
                             <details
                                 open
-                                className="overflow-hidden rounded-xl border border-slate-800 bg-[#0b1324]"
+                                className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
                             >
                                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5">
                                     <div>
-                                        <h2 className="font-semibold text-white">
+                                        <h2 className="font-semibold text-slate-900">
                                             1. Checklist-Based Assessment
                                         </h2>
-                                        <p className="mt-1 text-sm text-slate-400">
+                                        <p className="mt-1 text-sm text-slate-600">
                                             Compliance checklist results and recommendations.
                                         </p>
                                     </div>
-                                    <ChevronDown size={19} className="shrink-0 text-slate-400" />
+                                    <ChevronDown size={19} className="shrink-0 text-slate-600" />
                                 </summary>
 
-                                <div className="border-t border-slate-800 p-5">
+                                <div className="border-t border-slate-200 p-5">
                                     {checklistLoading ? (
-                                        <div className="flex items-center justify-center gap-3 rounded-lg border border-slate-800 bg-slate-900/50 p-8 text-sm text-slate-400">
+                                        <div className="flex items-center justify-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-8 text-sm text-slate-600">
                                             <RefreshCw size={17} className="animate-spin" />
                                             Loading checklist assessment...
                                         </div>
                                     ) : checklistError ? (
-                                        <div className="rounded-lg border border-red-800 bg-red-950/20 p-4">
+                                        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
                                             <div className="flex items-start gap-3">
-                                                <AlertTriangle size={19} className="mt-0.5 shrink-0 text-red-300" />
+                                                <AlertTriangle size={19} className="mt-0.5 shrink-0 text-red-700" />
                                                 <div>
-                                                    <h3 className="font-medium text-red-200">
+                                                    <h3 className="font-medium text-red-800">
                                                         Unable to load checklist assessment
                                                     </h3>
-                                                    <p className="mt-1 text-sm leading-6 text-red-200/80">
+                                                    <p className="mt-1 text-sm leading-6 text-red-800/80">
                                                         {checklistError}
                                                     </p>
                                                 </div>
@@ -471,7 +517,7 @@ export default function DataBreachScannerResult() {
                                         <div className="space-y-5">
                                             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                                                 <div>
-                                                    <p className="text-sm text-slate-200">
+                                                    <p className="text-sm text-slate-800">
                                                         Total checklist items:{" "}
                                                         <strong>{checklistTotal}</strong>
                                                     </p>
@@ -488,32 +534,32 @@ export default function DataBreachScannerResult() {
                                                     <ChecklistMetric
                                                         label="Compliant"
                                                         value={checklistSummary.COMPLIANT}
-                                                        className="border-emerald-700 bg-emerald-950/30 text-emerald-300"
+                                                        className="border-emerald-200 bg-emerald-50 text-emerald-700"
                                                     />
                                                     <ChecklistMetric
                                                         label="Non-Compliant"
                                                         value={checklistSummary.NON_COMPLIANT}
-                                                        className="border-red-700 bg-red-950/30 text-red-300"
+                                                        className="border-red-200 bg-red-50 text-red-700"
                                                     />
                                                     <ChecklistMetric
                                                         label="Partially Compliant"
                                                         value={checklistSummary.PARTIALLY_COMPLIANT}
-                                                        className="border-amber-700 bg-amber-950/30 text-amber-300"
+                                                        className="border-amber-200 bg-amber-50 text-amber-700"
                                                     />
                                                     <ChecklistMetric
                                                         label="Review"
                                                         value={checklistSummary.REVIEW}
-                                                        className="border-blue-700 bg-blue-950/30 text-blue-300"
+                                                        className="border-blue-200 bg-blue-50 text-blue-700"
                                                     />
                                                     <ChecklistMetric
                                                         label="Not Evaluated"
                                                         value={checklistSummary.NOT_EVALUATED}
-                                                        className="border-slate-600 bg-slate-800 text-slate-300"
+                                                        className="border-slate-200 bg-slate-100 text-slate-700"
                                                     />
                                                     <ChecklistMetric
                                                         label="Not Applicable"
                                                         value={checklistSummary.NOT_APPLICABLE}
-                                                        className="border-violet-700 bg-violet-950/30 text-violet-300"
+                                                        className="border-violet-200 bg-violet-50 text-violet-700"
                                                     />
                                                 </div>
                                             </div>
@@ -527,15 +573,15 @@ export default function DataBreachScannerResult() {
                                                         return (
                                                             <article
                                                                 key={checklist.id ?? checklist.code ?? index}
-                                                                className="rounded-xl border border-slate-800 bg-[#070d1d] p-4 sm:p-5"
+                                                                className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5"
                                                             >
                                                                 <div className="flex flex-col gap-3">
                                                                     <div className="flex items-start gap-3">
-                                                                        <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-lg bg-slate-800 px-2 text-xs font-semibold text-slate-200">
+                                                                        <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-lg bg-slate-100 px-2 text-xs font-semibold text-slate-800">
                                                                             {checklist.code || index + 1}
                                                                         </span>
                                                                         <div className="min-w-0 flex-1">
-                                                                            <p className="text-sm font-medium leading-6 text-slate-100">
+                                                                            <p className="text-sm font-medium leading-6 text-slate-900">
                                                                                 {checklist.description || "Checklist description not available."}
                                                                             </p>
                                                                             <div className="mt-2">
@@ -547,11 +593,11 @@ export default function DataBreachScannerResult() {
                                                                     </div>
 
                                                                     {checklist.comment && (
-                                                                        <div className="ml-0 rounded-lg border border-slate-800 bg-slate-900/60 p-3 sm:ml-10">
+                                                                        <div className="ml-0 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:ml-10">
                                                                             <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
                                                                                 Assessment Comment
                                                                             </p>
-                                                                            <p className="mt-1 text-sm leading-6 text-slate-200">
+                                                                            <p className="mt-1 text-sm leading-6 text-slate-800">
                                                                                 {checklist.comment}
                                                                             </p>
                                                                         </div>
@@ -571,13 +617,13 @@ export default function DataBreachScannerResult() {
                                                     })}
                                                 </div>
                                             ) : (
-                                                <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-5 text-sm text-slate-400">
+                                                <div className="rounded-lg border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
                                                     No checklist items were returned for this assessment.
                                                 </div>
                                             )}
                                         </div>
                                     ) : (
-                                        <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-5 text-sm text-slate-400">
+                                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
                                             Checklist assessment is not available for this scan.
                                         </div>
                                     )}
@@ -586,23 +632,23 @@ export default function DataBreachScannerResult() {
 
                             <details
                                 open
-                                className="overflow-hidden rounded-xl border border-slate-800 bg-[#0b1324]"
+                                className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm"
                             >
                                 <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5">
                                     <div>
-                                        <h2 className="font-semibold text-white">
+                                        <h2 className="font-semibold text-slate-900">
                                             2. Technical Scan Results
                                         </h2>
-                                        <p className="mt-1 text-sm text-slate-400">
+                                        <p className="mt-1 text-sm text-slate-600">
                                             Website security checks and technical findings.
                                         </p>
                                     </div>
-                                    <ChevronDown size={19} className="shrink-0 text-slate-400" />
+                                    <ChevronDown size={19} className="shrink-0 text-slate-600" />
                                 </summary>
 
-                                <div className="space-y-6 border-t border-slate-800 p-5">
+                                <div className="space-y-6 border-t border-slate-200 p-5">
                                     <div>
-                                        <h3 className="mb-3 font-semibold text-slate-200">
+                                        <h3 className="mb-3 font-semibold text-slate-800">
                                             Scan overview
                                         </h3>
                                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -627,11 +673,11 @@ export default function DataBreachScannerResult() {
                                     </div>
 
                                     {!executionGate.security_scans_run && (
-                                        <div className="rounded-lg border border-amber-700/60 bg-amber-950/20 p-4">
-                                            <p className="font-medium text-amber-200">
+                                        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+                                            <p className="font-medium text-amber-800">
                                                 Security checks were not run
                                             </p>
-                                            <p className="mt-1 text-sm leading-6 text-amber-100/80">
+                                            <p className="mt-1 text-sm leading-6 text-amber-700">
                                                 The initial scan did not detect personal information
                                                 patterns, so the additional website security checks
                                                 were skipped according to the scan settings.
@@ -640,19 +686,19 @@ export default function DataBreachScannerResult() {
                                     )}
 
                                     <div>
-                                        <h3 className="mb-3 font-semibold text-slate-200">
+                                        <h3 className="mb-3 font-semibold text-slate-800">
                                             Findings by severity
                                         </h3>
                                         <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
                                             {["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"].map((level) => (
                                                 <div
                                                     key={level}
-                                                    className="rounded-lg border border-slate-800 bg-slate-900/60 p-3"
+                                                    className="rounded-lg border border-slate-200 bg-slate-50 p-3"
                                                 >
                                                     <p className="text-xs text-slate-500">
                                                         {titleCase(level)}
                                                     </p>
-                                                    <p className="mt-1 text-xl font-semibold text-slate-100">
+                                                    <p className="mt-1 text-xl font-semibold text-slate-900">
                                                         {severityCounts[level] ?? 0}
                                                     </p>
                                                 </div>
@@ -662,7 +708,7 @@ export default function DataBreachScannerResult() {
 
                                     {scanners.length > 0 ? (
                                         <div>
-                                            <h3 className="mb-3 font-semibold text-slate-200">
+                                            <h3 className="mb-3 font-semibold text-slate-800">
                                                 Individual security checks
                                             </h3>
                                             <div className="space-y-3">
@@ -675,11 +721,11 @@ export default function DataBreachScannerResult() {
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-5">
-                                            <p className="font-medium text-slate-200">
+                                        <div className="rounded-lg border border-slate-200 bg-slate-50 p-5">
+                                            <p className="font-medium text-slate-800">
                                                 No additional security checks were performed
                                             </p>
-                                            <p className="mt-1 text-sm leading-6 text-slate-400">
+                                            <p className="mt-1 text-sm leading-6 text-slate-600">
                                                 The scanner did not identify personal information
                                                 patterns during its initial check. As a result, the
                                                 additional security checks were skipped.
@@ -689,14 +735,14 @@ export default function DataBreachScannerResult() {
 
                                     {skippedScanners.length > 0 && (
                                         <div>
-                                            <h3 className="mb-2 font-semibold text-slate-200">
+                                            <h3 className="mb-2 font-semibold text-slate-800">
                                                 Checks not performed
                                             </h3>
                                             <div className="flex flex-wrap gap-2">
                                                 {skippedScanners.map((scanner) => (
                                                     <span
                                                         key={scanner}
-                                                        className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-slate-300"
+                                                        className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-700"
                                                     >
                                                         {titleCase(scanner)}
                                                     </span>
@@ -705,22 +751,22 @@ export default function DataBreachScannerResult() {
                                         </div>
                                     )}
 
-                                    <div className="grid gap-3 border-t border-slate-800 pt-5 sm:grid-cols-2 lg:grid-cols-3">
+                                    <div className="grid gap-3 border-t border-slate-200 pt-5 sm:grid-cols-2 lg:grid-cols-3">
                                         <div>
                                             <p className="text-xs text-slate-500">Scan started</p>
-                                            <p className="mt-1 text-sm text-slate-300">
+                                            <p className="mt-1 text-sm text-slate-700">
                                                 {formatDate(result.started_at)}
                                             </p>
                                         </div>
                                         <div>
                                             <p className="text-xs text-slate-500">Scan completed</p>
-                                            <p className="mt-1 text-sm text-slate-300">
+                                            <p className="mt-1 text-sm text-slate-700">
                                                 {formatDate(result.completed_at)}
                                             </p>
                                         </div>
                                         <div>
                                             <p className="text-xs text-slate-500">Execution mode</p>
-                                            <p className="mt-1 text-sm text-slate-300">
+                                            <p className="mt-1 text-sm text-slate-700">
                                                 {titleCase(result.execution_mode || "Not available")}
                                             </p>
                                         </div>
@@ -730,7 +776,7 @@ export default function DataBreachScannerResult() {
                         </div>
 
                         {result.error_message && (
-                            <div className="mt-6 rounded-xl border border-red-800 bg-red-950/20 p-4 text-sm text-red-200">
+                            <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
                                 {result.error_message}
                             </div>
                         )}

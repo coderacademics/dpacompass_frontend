@@ -21,9 +21,16 @@ export default function DomainAccordion({
     savingId,
     audit,
     auditId,
+    publicAuditId: publicAuditIdProp,
+    applicationUrl = "",
+    startDataBreachScan,
+    getDataBreachScanStatus,
     defaultOpen = false,
 }) {
     const [open, setOpen] = useState(defaultOpen);
+
+    const resolvedPublicAuditId =
+        publicAuditIdProp || audit?.public_audit_id || auditId;
 
     const checklists = domain.checklists || [];
     const total = checklists.length;
@@ -156,8 +163,12 @@ export default function DomainAccordion({
                     {/* AUTOMATED TOOLS */}
                     <DomainToolsSection
                         tools={domainTools}
-                        auditId={auditId}
+                        auditId={resolvedPublicAuditId}
+                        publicAuditId={resolvedPublicAuditId}
                         audit={audit}
+                        applicationUrl={applicationUrl}
+                        startDataBreachScan={startDataBreachScan}
+                        getDataBreachScanStatus={getDataBreachScanStatus}
                     />
 
                     {/* CHECKLIST ITEMS */}

@@ -655,7 +655,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-
+{/* 
           <Route
             path="/auditor-workspace/:publicAuditId"
             element={
@@ -663,7 +663,7 @@ function App() {
                 <AuditorChecklistPage />
               </ProtectedRoute>
             }
-          />
+          /> */}
 
           <Route
             path="/auditor/inprogress"

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 
@@ -26,9 +26,73 @@ import {
     getChecklistResponse,
 } from "./utils/auditorChecklistUtils";
 import { fetchWithAuth } from "../utilities/fetchWithAuth";
+import { startSelfCheckDataBreachScanner } from "../utilities/selfCheckApi";
+import { getSelfCheckBreachScanStatus } from "../utilities/breachApi";
 
+
+const extractBreachScanRecords = (response) => {
+    if (Array.isArray(response)) {
+        return response;
+    }
+
+    const possibleArrays = [
+        response?.audits,
+        response?.scans,
+        response?.results,
+        response?.data?.audits,
+        response?.data?.scans,
+        response?.data?.results,
+        response?.data,
+    ];
+
+    return possibleArrays.find(Array.isArray) || [];
+};
+
+const getBreachRecordPublicAuditId = (record) => {
+    const value =
+        record?.public_audit_id ??
+        record?.publicAuditId ??
+        record?.audit?.public_audit_id ??
+        record?.scan?.public_audit_id ??
+        record?.audit?.publicAuditId ??
+        record?.scan?.publicAuditId;
+
+    return value ? String(value) : "";
+};
+
+const getBreachRecordStatus = (record) => {
+    return String(
+        record?.status ??
+        record?.scan_status ??
+        record?.audit_status ??
+        record?.task_status ??
+        record?.state ??
+        ""
+    ).trim().toLowerCase().replaceAll("-", "_");
+};
+
+
+// Return true when at least one checklist item has an empty status.
+// Scanner results should be mapped if any checklist row is still unfilled.
+const hasAnyEmptyChecklistStatus = (checklistData) => {
+    const domainList = Array.isArray(checklistData?.domains)
+        ? checklistData.domains
+        : [];
+
+    const checklistItems = domainList.flatMap((domain) =>
+        Array.isArray(domain?.checklists) ? domain.checklists : []
+    );
+
+    if (checklistItems.length === 0) return false;
+
+    return checklistItems.some((item) => {
+        const status = item?.status;
+        return status === null || status === undefined || String(status).trim() === "";
+    });
+};
 
 export default function AuditorChecklistPage() {
+
 
     const navigate = useNavigate();
 
@@ -42,7 +106,7 @@ export default function AuditorChecklistPage() {
     const [generatingReport, setGeneratingReport] = useState(false);
     const [reportGenerated, setReportGenerated] = useState(false);
     const [audit, setAudit] = useState(null);
-
+    const [applicationUrl, setApplicationUrl] = useState("");
     const [domains, setDomains] = useState([]);
 
     // Current editable responses
@@ -62,6 +126,450 @@ export default function AuditorChecklistPage() {
         message: "",
     });
 
+    // Prevent repeated checklist mapping while the status endpoint is polled.
+    const mappingRef = useRef(false);
+    const mappedAuditIdsRef = useRef(new Set());
+
+    // Map completed scanner findings into the checklist using Public Audit ID.
+    // This is triggered automatically when the scanner status becomes completed.
+    const handleMapToChecklist = useCallback(async (publicAuditId) => {
+        const scannerPublicAuditId = publicAuditId;
+        console.log("testing");
+        
+        if (!scannerPublicAuditId) {
+            console.error("[Breach checklist mapping] Aborted: Public Audit ID missing.");
+            setNotification({
+                type: "error",
+                message: "Public Audit ID is missing. Cannot map scanner results.",
+            });
+            return false;
+        }
+
+        const id = String(scannerPublicAuditId);
+        const mappedStorageKey = `breach-checklist-mapped-${id}`;
+
+        // Do not use localStorage as a reason to skip the POST. It can be stale
+        // if the checklist was reset or the earlier mapping was only partial.
+        if (mappedAuditIdsRef.current.has(id)) {
+            console.info("[Breach checklist mapping] Already mapped successfully in this page session; skipping duplicate.", {
+                publicAuditId: id,
+            });
+            return true;
+        }
+
+        if (mappingRef.current) {
+            console.warn("[Breach checklist mapping] Another mapping request is already in progress; this request is skipped.", {
+                publicAuditId: id,
+            });
+            return false;
+        }
+
+        mappingRef.current = true;
+        console.groupCollapsed(`[Breach checklist mapping] ${id}`);
+        console.info("Starting checklist mapping", {
+            publicAuditId: id,
+            endpoint: `/api/checklists/fetch-breach-result/${encodeURIComponent(id)}/`,
+            trigger: "Scanner status COMPLETED",
+        });
+
+        try {
+            const endpoint = `/api/checklists/fetch-breach-result/${encodeURIComponent(id)}/`;
+            const response = await fetchWithAuth(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+            });
+
+            console.info("Mapping API HTTP response", {
+                status: response.status,
+                ok: response.ok,
+                statusText: response.statusText,
+            });
+
+            const result = await response.json().catch((parseError) => {
+                console.error("Could not parse mapping API response as JSON.", parseError);
+                return {};
+            });
+
+            console.info("Mapping API response body", result);
+
+            if (!response.ok || result?.success !== true) {
+                throw new Error(
+                    result?.message ||
+                    result?.error ||
+                    `Mapping API failed with HTTP ${response.status}.`
+                );
+            }
+
+            mappedAuditIdsRef.current.add(id);
+            try {
+                localStorage.setItem(mappedStorageKey, "true");
+            } catch (storageError) {
+                console.warn("Could not persist mapped state in localStorage.", storageError);
+            }
+
+            const savedCount = result.total_saved ?? result.totalSaved ?? 0;
+            console.info("Checklist mapping completed successfully.", {
+                publicAuditId: id,
+                totalSaved: savedCount,
+                response: result,
+            });
+
+            setNotification({
+                type: "success",
+                message: `PII-in-Transit results mapped to the checklist successfully. ${savedCount} results saved.`,
+            });
+            return true;
+        } catch (err) {
+            console.error("[Breach checklist mapping] Request failed.", {
+                publicAuditId: id,
+                error: err,
+            });
+            setNotification({
+                type: "error",
+                message: err?.message || "Unable to map scanner results to the checklist.",
+            });
+            return false;
+        } finally {
+            mappingRef.current = false;
+            console.groupEnd();
+        }
+    }, []);
+
+    // Start the PII-in-Transit / Data Breach scanner using this audit's
+    // existing Public Audit ID and application URL.
+    const startDataBreachScan = useCallback(
+        async ({ publicAuditId: scannerAuditId, applicationUrl: scannerUrl }) => {
+            let user = {};
+
+            try {
+                user = JSON.parse(localStorage.getItem("user") || "{}");
+            } catch {
+                user = {};
+            }
+
+            const dpacompassUsername =
+                user.username ||
+                user.dpacompass_username ||
+                "";
+
+            if (!dpacompassUsername) {
+                throw new Error(
+                    "DPACOMPASS username is missing. Please sign in again."
+                );
+            }
+
+            if (!scannerAuditId) {
+                throw new Error("Public Audit ID is missing.");
+            }
+
+            if (!scannerUrl) {
+                throw new Error("Application URL is missing.");
+            }
+
+            return startSelfCheckDataBreachScanner({
+                url: scannerUrl.trim(),
+                publicAuditId: scannerAuditId,
+                dpacompass_username: dpacompassUsername,
+            });
+        },
+        []
+    );
+
+    // The breach status API returns records grouped by status.
+    // Find the record associated with this audit and return a normalized
+    // status object for DataBreachScannerPanel.
+    const getDataBreachScanStatus = useCallback(
+        async ({ publicAuditId: scannerAuditId }) => {
+            if (!scannerAuditId) {
+                throw new Error("Public Audit ID is missing.");
+            }
+
+            const auditId = String(scannerAuditId);
+
+            console.warn(
+                "[Breach scanner status] Polling status lists for audit.",
+                {
+                    publicAuditId: auditId,
+                }
+            );
+
+            const requestedStatuses = [
+                "RUNNING",
+                "PENDING",
+                "COMPLETED",
+            ];
+
+            // Helper: prevent an API request from hanging indefinitely.
+            const withTimeout = (promise, timeoutMs, status) => {
+                let timeoutId;
+
+                const timeoutPromise = new Promise((_, reject) => {
+                    timeoutId = setTimeout(() => {
+                        reject(
+                            new Error(
+                                `${status} status request timed out after ${timeoutMs}ms`
+                            )
+                        );
+                    }, timeoutMs);
+                });
+
+                return Promise.race([
+                    promise,
+                    timeoutPromise,
+                ]).finally(() => {
+                    clearTimeout(timeoutId);
+                });
+            };
+
+            console.warn(
+                "[Breach DEBUG] Starting status requests",
+                auditId
+            );
+
+            // Request all three status lists.
+            const statusRequests = await Promise.allSettled(
+                requestedStatuses.map((status) => {
+                    console.warn(
+                        `[Breach DEBUG] Request started: ${status}`
+                    );
+
+                    return withTimeout(
+                        getSelfCheckBreachScanStatus(status),
+                        15000,
+                        status
+                    );
+                })
+            );
+
+            console.warn(
+                "[Breach DEBUG] All status requests settled",
+                auditId
+            );
+
+            // Log each response.
+            statusRequests.forEach((result, index) => {
+                const status = requestedStatuses[index];
+
+                if (result.status === "fulfilled") {
+                    console.warn(
+                        `[Breach scanner status] ${status} response:`,
+                        result.value
+                    );
+                } else {
+                    console.error(
+                        `[Breach scanner status] ${status} request failed:`,
+                        result.reason
+                    );
+                }
+            });
+
+            const statusGroups = [
+                "running",
+                "pending",
+                "completed",
+            ];
+
+            const recordsByStatus = [];
+
+            // Extract records and match them against the current Public Audit ID.
+            statusRequests.forEach((request, index) => {
+                if (request.status !== "fulfilled") {
+                    return;
+                }
+
+                const records = extractBreachScanRecords(
+                    request.value
+                );
+
+                console.debug(
+                    `[Breach scanner status] Extracted ${requestedStatuses[index]} records:`,
+                    records
+                );
+
+                records.forEach((record) => {
+                    const recordAuditId =
+                        getBreachRecordPublicAuditId(record);
+
+                    console.debug(
+                        "[Breach scanner status] Comparing audit IDs:",
+                        {
+                            expected: auditId,
+                            received: recordAuditId,
+                            record,
+                        }
+                    );
+
+                    if (
+                        String(recordAuditId || "").trim() ===
+                        auditId.trim()
+                    ) {
+                        recordsByStatus.push({
+                            ...record,
+                            status:
+                                getBreachRecordStatus(record) ||
+                                statusGroups[index],
+                        });
+                    }
+                });
+            });
+
+            console.warn(
+                "[Breach scanner status] Matching records:",
+                {
+                    publicAuditId: auditId,
+                    matchedRecords: recordsByStatus,
+                }
+            );
+
+            // If matching records are found, determine the current status.
+            if (recordsByStatus.length > 0) {
+                const completedRecord = recordsByStatus.find(
+                    (record) =>
+                        [
+                            "completed",
+                            "success",
+                            "successful",
+                        ].includes(
+                            String(record.status).toLowerCase()
+                        )
+                );
+
+                // Completed scan: fetch the current checklist and check whether
+                // this scanner is already associated with one of its domains.
+                if (completedRecord) {
+                    console.info("[Breach scanner status] Scan completed.", {
+                        publicAuditId: auditId,
+                        completedRecord,
+                    });
+
+                    let checklistData = null;
+                    try {
+                        checklistData = await getAuditorChecklist(auditId);
+                    } catch (checklistError) {
+                        console.error(
+                            "[Breach checklist mapping] Could not fetch checklist to verify domain mapping.",
+                            checklistError
+                        );
+                    }
+
+                    if (!checklistData || !Array.isArray(checklistData.domains)) {
+                        console.error(
+                            "[Breach checklist mapping] Checklist data unavailable; cannot safely evaluate checklist statuses. Mapping skipped.",
+                            { publicAuditId: auditId }
+                        );
+                    } else {
+                        const hasEmptyStatus = hasAnyEmptyChecklistStatus(checklistData);
+
+                        if (hasEmptyStatus) {
+                            console.info(
+                                "[Breach checklist mapping] At least one checklist status is empty; mapping completed scanner results.",
+                                { publicAuditId: auditId }
+                            );
+
+                            // handleMapToChecklist expects the Public Audit ID string.
+                            await handleMapToChecklist(auditId);
+                        } else {
+                            console.info(
+                                "[Breach checklist mapping] No checklist statuses are empty; skipping scanner mapping.",
+                                { publicAuditId: auditId }
+                            );
+                        }
+                    }
+
+                    return {
+                        ...completedRecord,
+                        status: "completed",
+                    };
+                }
+
+                // Running scan.
+                const runningRecord = recordsByStatus.find(
+                    (record) =>
+                        [
+                            "running",
+                            "in_progress",
+                            "processing",
+                        ].includes(
+                            String(record.status).toLowerCase()
+                        )
+                );
+
+                if (runningRecord) {
+                    return {
+                        ...runningRecord,
+                        status: "running",
+                    };
+                }
+
+                // Otherwise, the scan is pending.
+                return {
+                    ...recordsByStatus[0],
+                    status: "pending",
+                };
+            }
+
+            console.warn(
+                "[Breach scanner status] No status record matched this Public Audit ID yet.",
+                {
+                    publicAuditId: auditId,
+                }
+            );
+
+            // If all requests failed, report an error.
+            const allFailed = statusRequests.every(
+                (request) => request.status === "rejected"
+            );
+
+            if (allFailed) {
+                throw new Error(
+                    "Unable to retrieve Data Breach Scanner status."
+                );
+            }
+
+            // Keep polling while the scanner result is not yet available.
+            return {
+                status: "running",
+                message:
+                    "Scan queued. Waiting for the scanner status...",
+            };
+        },
+        [handleMapToChecklist]
+    );
+
+    // On page reload, check whether an earlier scanner run has completed.
+    // If it is completed and any checklist status is empty, the status
+    // callback will invoke the mapping endpoint for this Public Audit ID.
+    useEffect(() => {
+        if (!publicAuditId) return;
+
+        let cancelled = false;
+
+        const checkPreviousCompletedScan = async () => {
+            try {
+                console.info(
+                    "[Breach scanner status] Checking previous scan on checklist page load.",
+                    { publicAuditId }
+                );
+
+                if (cancelled) return;
+
+                await getDataBreachScanStatus({ publicAuditId });
+            } catch (error) {
+                if (!cancelled) {
+                    console.error(
+                        "[Breach scanner status] Failed to check previous scan on page load.",
+                        error
+                    );
+                }
+            }
+        };
+
+        checkPreviousCompletedScan();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [publicAuditId, getDataBreachScanStatus]);
 
     // ==========================================
     // RESPONSE HELPERS
@@ -109,45 +617,10 @@ export default function AuditorChecklistPage() {
         try {
             setLoading(true);
             setError("");
+            setApplicationUrl("");
 
-            // ==========================================
-            // STEP 1: FETCH APPLICATION DETAILS
-            // ==========================================
-            try {
-                const applicationResponse = await fetchWithAuth(
-                    `/api/applications/${encodeURIComponent(publicAuditId)}/`,
-                    {
-                        method: "GET",
-                        headers: {
-                            Accept: "application/json",
-                        },
-                    }
-                );
-
-                if (!applicationResponse.ok) {
-                    throw new Error(
-                        `Application API failed. HTTP ${applicationResponse.status}`
-                    );
-                }
-
-                const applicationData = await applicationResponse.json();
-
-                // Display complete response in browser console
-                console.log("APPLICATION DETAILS RESPONSE:", applicationData);
-
-                // Display application URL separately
-                console.log(
-                    "APPLICATION URL:",
-                    applicationData?.application_url
-                );
-
-            } catch (applicationError) {
-                console.error(
-                    "Application details fetch error:",
-                    applicationError
-                );
-            }
-
+            // application_url is supplied by the auditor checklist response.
+            // Do not call the published-report application endpoint with Public Audit ID.
             // ==========================================
             // STEP 2: FETCH AUDITOR CHECKLIST
             // ==========================================
@@ -158,6 +631,26 @@ export default function AuditorChecklistPage() {
                     "Invalid auditor checklist response received."
                 );
             }
+
+            // Read application_url directly from the auditor checklist response.
+            const checklistApplicationUrl =
+                data?.application_url ||
+                data?.applicationUrl ||
+                data?.application?.application_url ||
+                data?.application?.url ||
+                data?.audit?.application_url ||
+                data?.audit?.application?.application_url ||
+                data?.data?.application_url ||
+                data?.data?.applicationUrl ||
+                data?.data?.application?.application_url ||
+                data?.data?.application?.url ||
+                "";
+
+            setApplicationUrl(
+                typeof checklistApplicationUrl === "string"
+                    ? checklistApplicationUrl.trim()
+                    : ""
+            );
 
             const normalized = normalizeDomains(data);
 
@@ -846,6 +1339,9 @@ export default function AuditorChecklistPage() {
                                 savingId={savingId}
                                 audit={audit}
                                 publicAuditId={audit?.public_audit_id || publicAuditId}
+                                applicationUrl={applicationUrl}
+                                startDataBreachScan={startDataBreachScan}
+                                getDataBreachScanStatus={getDataBreachScanStatus}
                                 defaultOpen={index === 0}
                             />
                         ))

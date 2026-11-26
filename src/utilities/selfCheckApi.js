@@ -63,13 +63,14 @@ export const startSelfCheckDataBreachScanner = async ({
     const userData = JSON.parse(
         localStorage.getItem("user") || "{}"
     );
-
+    console.log("PUBLIC AUDIT ID", publicAuditId);
+    
     if (!userData.username) {
         throw new Error("Username not found. Please sign in again.");
     }
 
     const payload = {
-        publicAuditId,
+        public_audit_id : publicAuditId,
         url,
         dpacompass_username
     };
